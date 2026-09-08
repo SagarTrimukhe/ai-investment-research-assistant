@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: investment_research_app
+    ports:
+      - "8501:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-ai-investment-research-repo}
+      - CHROMA_PERSIST_DIR=/workspace/data/chroma_db
+    volumes:
+      - ./data/chroma_db:/workspace/data/chroma_db
+      - ./data/raw_pdfs:/workspace/data/raw_pdfs
+      - ./data/processed:/workspace/data/processed
+    restart: unless-stopped
