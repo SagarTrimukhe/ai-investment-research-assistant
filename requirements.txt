@@ -4,20 +4,28 @@ langchain>=0.3.0
 langchain-core>=0.3.0
 langchain-community>=0.3.0
 langchain-openai>=0.2.0
+langchain-google-genai>=2.0.0
 
 # Vector DB & Embeddings
 chromadb>=0.5.0
+tiktoken>=0.7.0
 
 # Document Ingestion & Parsing
 pypdf>=4.0.0
+pdfplumber>=0.11.0
 
-# Financial Data
+# Financial Data & External APIs
 yfinance>=0.2.40
+requests>=2.32.0
 
-# Frontend
+# Frontend & Web UI
 streamlit>=1.38.0
 
-# Data Processing
+# Cloud & Storage
+boto3>=1.35.0
+
+# Data Processing & Validation
 pydantic>=2.8.0
 pandas>=2.2.0
 python-dotenv>=1.0.0
+tenacity>=8.5.0
