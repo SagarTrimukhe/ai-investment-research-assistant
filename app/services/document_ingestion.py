@@ -1,3 +1,5 @@
+import re
+import time
 from typing import Callable, List, Optional, Set
 import pypdf
 from app.integrations.vector_store import get_vector_store
@@ -25,7 +27,11 @@ def ingest_document_text(
     batch_size: int = 20,
     progress_callback: Optional[Callable[[int, int, str], None]] = None,
 ) -> int:
-    """Split text into chunks and index into ChromaDB with ticker metadata."""
+    """Split text into chunks and index into ChromaDB with ticker metadata.
+    
+    Batches texts into small chunks and uses automatic exponential backoff
+    to safely respect Gemini API Free Tier limits (100 requests/minute).
+    """
     if not text.strip():
         return 0
 
@@ -48,6 +54,7 @@ def ingest_document_text(
     total_ingested = 0
     total_chunks = len(chunks)
 
+    # Process in batches to stay within rate limits
     for start_idx in range(0, total_chunks, batch_size):
         end_idx = min(start_idx + batch_size, total_chunks)
         batch_chunks = chunks[start_idx:end_idx]
@@ -75,8 +82,9 @@ def ingest_document_text(
                 )
                 if is_rate_limit and attempt < max_retries - 1:
                     wait_seconds = 60
-                    # BUG: re and time not imported - this will crash
                     sec_match = re.search(r"retry in ([0-9]+(?:\.[0-9]+)?)s", err_msg)
+                    if not sec_match:
+                        sec_match = re.search(r"seconds:\s*([0-9]+)", err_msg)
                     if sec_match:
                         wait_seconds = max(10, int(float(sec_match.group(1))) + 2)
 
@@ -84,13 +92,17 @@ def ingest_document_text(
                         progress_callback(
                             start_idx,
                             total_chunks,
-                            f"Rate limited. Waiting {wait_seconds}s..."
+                            f"\u23f3 Gemini Rate Limit (100 RPM). Waiting {wait_seconds}s before retrying batch..."
                         )
                     time.sleep(wait_seconds)
                 else:
                     raise e
 
+        # Pacing pause between batches
         if end_idx < total_chunks:
             time.sleep(1.0)
+
+    if progress_callback:
+        progress_callback(total_chunks, total_chunks, f"Finished {filename} ({total_ingested} chunks)")
 
     return total_ingested
