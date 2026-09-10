@@ -1,0 +1,34 @@
+APPLE INC.
+CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS (Unaudited)
+(In millions, except number of shares which are reflected in thousands and per share amounts)
+
+                                        Three Months Ended
+                                   June 29, 2024    July 1, 2023
+Net sales:
+  Products                          $ 61,564        $ 60,584
+  Services                            24,213          21,214
+    Total net sales                    85,777          81,798
+
+Cost of sales:
+  Products                            39,744          39,483
+  Services                             6,296           6,282
+    Total cost of sales                46,040          45,765
+
+Gross margin                           39,737          36,033
+
+Operating expenses:
+  Research and development              8,003           7,442
+  Selling, general and administrative   6,320           5,973
+    Total operating expenses           14,323          13,415
+
+Operating income                       25,414          22,618
+
+ITEM 1A. RISK FACTORS (excerpted)
+
+The Company's operations and financial results are subject to various risks and uncertainties, including but not limited to the following, that could adversely affect its business, results of operations, financial condition, and the trading price of the Company's common stock.
+
+Global and Regional Economic Conditions. The Company has international operations with significant revenue and costs denominated in foreign currencies. Adverse macroeconomic conditions, including inflation, slower growth or recession, changes to fiscal and monetary policy, tighter credit, higher interest rates, high unemployment and currency fluctuations could materially adversely affect demand for the Company's products and services.
+
+Supply Chain and Manufacturing. The Company depends on component and product manufacturing and logistical services provided by outsourcing partners, many of which are located in China, India, and other countries. The Company has in the past experienced, and may in the future experience, supply shortages arising from, among other things, manufacturing or logistics disruptions, component supply constraints, or the effects of natural disasters, trade restrictions, or public health issues. Concentration of suppliers in specific geographies increases exposure to localized disruptions.
+
+Note: this is a condensed sample from Apple's public 10-Q filing (quarter ending June 29 2024). just using it to test the ingestion pipeline, not actual investment advice lol
