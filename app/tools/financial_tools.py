@@ -1,6 +1,6 @@
 import numpy as np
 from langchain_core.tools import tool
-from app.market_data import (
+from app.integrations.market_data import (
     fetch_stock_overview,
     fetch_price_history,
 )
@@ -10,7 +10,7 @@ from app.integrations.vector_store import get_vector_store
 @tool
 def get_stock_valuation_metrics(ticker: str) -> dict:
     """Fetch valuation multiples (P/E, forward P/E, PEG, P/B, EV/EBITDA, profit margin) for a stock ticker."""
-    from app.market_data import fetch_valuation_metrics
+    from app.integrations.market_data import fetch_valuation_metrics
     metrics = fetch_valuation_metrics(ticker)
     if not metrics:
         return {"error": f"Unable to fetch valuation metrics for {ticker}"}
@@ -36,8 +36,11 @@ def get_stock_price_volatility(ticker: str, period: str = "6mo") -> dict:
 
         close = hist["Close"]
         returns = close.pct_change().dropna()
+        # Annualized volatility (252 trading days)
         ann_vol = float(returns.std() * np.sqrt(252)) * 100
+        # Total period return
         period_return = float((close.iloc[-1] - close.iloc[0]) / close.iloc[0]) * 100
+        # Max drawdown
         rolling_max = close.cummax()
         drawdown = (close - rolling_max) / rolling_max
         max_drawdown = float(drawdown.min()) * 100
@@ -59,17 +62,25 @@ def search_sec_filings(ticker: str, query: str) -> str:
     """Search vector database of SEC 10-K filings for disclosures, risk factors, or financial notes."""
     try:
         store = get_vector_store()
-        docs = store.similarity_search(query, k=3, filter={"ticker": ticker.upper()})
+        docs = []
+        try:
+            docs = store.similarity_search(query, k=3, filter={"ticker": ticker.upper()})
+        except Exception:
+            docs = []
+
         if not docs:
             docs = store.similarity_search(f"{ticker} {query}", k=3)
+
         if not docs:
             return f"No SEC 10-K filing chunks found for {ticker} matching '{query}'."
+
         snippets = [f"[Filing Excerpt {i+1}]: {doc.page_content.strip()}" for i, doc in enumerate(docs)]
         return "\n\n".join(snippets)
     except Exception as e:
         return f"Error querying vector store: {e}"
 
 
+# List of all available financial tools for autonomous agent binding
 FINANCIAL_TOOLS = [
     get_stock_valuation_metrics,
     get_stock_overview,
