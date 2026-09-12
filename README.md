@@ -38,3 +38,4 @@ streamlit run app/main.py
   - `summary_agent_node`: Compiles draft investment memorandum.
   - `human_approval_gate_node`: Freezes state with LangGraph `interrupt()` for analyst sign-off before export.
 - **Frontend**: Streamlit dashboard (Ingestion, Analysis, Review).
+# ai-investment-research-assistant
