@@ -9,12 +9,14 @@ class TrendAnalysisOutput(BaseModel):
     sentiment_score: float = Field(description="Sentiment confidence between -1.0 and 1.0")
     sector_tailwinds: List[str] = Field(description="Positive sector catalysts and growth drivers")
     macro_risks: List[str] = Field(description="Macroeconomic headwinds and risks")
+    summary: str = Field(description="Brief 1-2 sentence sentiment summary")
 
 
 def trend_analysis_node(state: AgentState) -> dict:
     """Analyzes market trends and sentiment for the target ticker."""
     ticker = state.get("ticker", "AAPL")
 
+    # (in parallel mode, fundamentals may not be populated yet — that's fine)
     fundamentals = state.get("fundamentals", {})
     context = fundamentals.get("summary", "") if fundamentals else ""
 
