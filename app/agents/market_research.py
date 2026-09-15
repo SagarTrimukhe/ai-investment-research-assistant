@@ -2,7 +2,7 @@ from typing import List
 from pydantic import BaseModel, Field
 from app.core.state import AgentState
 from app.integrations.vector_store import get_vector_store
-from app.llm import get_llm
+from app.core.llm import get_llm
 
 
 class FinancialMetrics(BaseModel):
@@ -22,6 +22,7 @@ def market_research_node(state: AgentState) -> dict:
     """Pulls SEC filing chunks from chroma and extracts financial data."""
     ticker = state.get("ticker", "AAPL")
 
+    # pull relevant chunks from chroma
     store = get_vector_store()
     query = f"{ticker} financial results revenue operating income risk factors"
     docs = []
@@ -48,6 +49,7 @@ def market_research_node(state: AgentState) -> dict:
 
     context = "\n\n".join([doc.page_content for doc in docs])
 
+    # prompt gemini with pydantic structured output
     llm = get_llm(temperature=0.1)
     structured_llm = llm.with_structured_output(MarketResearchOutput)
 
