@@ -31,4 +31,4 @@ Global and Regional Economic Conditions. The Company has international operation
 
 Supply Chain and Manufacturing. The Company depends on component and product manufacturing and logistical services provided by outsourcing partners, many of which are located in China, India, and other countries. The Company has in the past experienced, and may in the future experience, supply shortages arising from, among other things, manufacturing or logistics disruptions, component supply constraints, or the effects of natural disasters, trade restrictions, or public health issues. Concentration of suppliers in specific geographies increases exposure to localized disruptions.
 
-Note: This is a simplified sample based on Apple's public SEC filings (10-Q for the period ending June 29, 2024). It has been condensed for testing purposes only and should not be used for investment decisions.
+Note: this is a condensed sample from Apple's public 10-Q filing (quarter ending June 29 2024). just using it to test the ingestion pipeline, not actual investment advice lol
