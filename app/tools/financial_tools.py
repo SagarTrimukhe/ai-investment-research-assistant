@@ -1,6 +1,7 @@
 import numpy as np
 from langchain_core.tools import tool
 from app.integrations.market_data import (
+    fetch_valuation_metrics,
     fetch_stock_overview,
     fetch_price_history,
 )
@@ -10,7 +11,6 @@ from app.integrations.vector_store import get_vector_store
 @tool
 def get_stock_valuation_metrics(ticker: str) -> dict:
     """Fetch valuation multiples (P/E, forward P/E, PEG, P/B, EV/EBITDA, profit margin) for a stock ticker."""
-    from app.integrations.market_data import fetch_valuation_metrics
     metrics = fetch_valuation_metrics(ticker)
     if not metrics:
         return {"error": f"Unable to fetch valuation metrics for {ticker}"}

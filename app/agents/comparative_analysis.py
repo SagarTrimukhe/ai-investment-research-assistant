@@ -6,7 +6,7 @@ from app.tools.financial_tools import (
     get_stock_valuation_metrics,
     get_stock_overview,
 )
-from app.integrations.market_data import fetch_valuation_metric
+from app.integrations.market_data import fetch_valuation_metrics
 
 
 class ValuationMultiple(BaseModel):
@@ -72,9 +72,9 @@ def comparative_analysis_node(state: AgentState) -> dict:
 
     # BUG: calls fetch_valuation_metric (singular) - NameError at runtime
     if not target_metrics:
-        target_metrics = fetch_valuation_metric(ticker)
+        target_metrics = fetch_valuation_metrics(ticker)
     if not bench_metrics:
-        bench_metrics = fetch_valuation_metric(benchmark)
+        bench_metrics = fetch_valuation_metrics(benchmark)
 
     fundamentals = state.get("fundamentals", {})
     fund_summary = fundamentals.get("summary", "No filing fundamentals available.")
@@ -129,8 +129,12 @@ Compare {ticker} vs. {benchmark}. Assess whether {ticker} is trading at a premiu
             "benchmark_name": bench_metrics.get("name", benchmark),
             "target_metrics": target_metrics,
             "benchmark_metrics": bench_metrics,
-            "relative_valuation_summary": f"Valuation comparison generated using live metrics.",
-            "multiples": [],
+            "relative_valuation_summary": f"Valuation comparison generated using live metrics: {ticker} ({target_metrics.get('pe_ratio')}) vs. {benchmark} ({bench_metrics.get('pe_ratio')}).",
+            "multiples": [
+                {"metric": "Market Cap", "target_value": target_metrics.get("market_cap", "N/A"), "benchmark_value": bench_metrics.get("market_cap", "N/A"), "advantage": "Tie"},
+                {"metric": "P/E Ratio", "target_value": target_metrics.get("pe_ratio", "N/A"), "benchmark_value": bench_metrics.get("pe_ratio", "N/A"), "advantage": "Tie"},
+                {"metric": "Forward P/E", "target_value": target_metrics.get("forward_pe", "N/A"), "benchmark_value": bench_metrics.get("forward_pe", "N/A"), "advantage": "Tie"},
+            ],
             "target_advantages": [f"Established market presence in core sector."],
             "target_vulnerabilities": [f"Competitive pressure from {benchmark}."],
             "verdict": f"Comparative evaluation between {ticker} and {benchmark} based on current market multiples.",
