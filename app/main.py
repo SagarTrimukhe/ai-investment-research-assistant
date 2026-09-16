@@ -1,3 +1,9 @@
+import os
+import sys
+
+# ensure project root is on python path regardless of how streamlit is launched
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import streamlit as st
 from app.agents.market_research import market_research_node
 
