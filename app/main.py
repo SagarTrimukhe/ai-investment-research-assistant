@@ -1,4 +1,5 @@
 import streamlit as st
+from app.agents.market_research import market_research_node
 
 st.set_page_config(
     page_title="AI Investment Research Assistant",
@@ -36,7 +37,32 @@ with tab_analysis:
         benchmark = st.text_input("Benchmark Ticker", value="MSFT")
 
     if st.button("Start Research Workflow"):
-        st.write(f"Initiating research for {ticker} vs {benchmark}...")
+        with st.spinner(f"Running market research agent for {ticker}..."):
+            state = {"ticker": ticker}
+            result = market_research_node(state)
+
+        st.success(f"Market research completed for {ticker}")
+
+        fundamentals = result.get("fundamentals", {})
+        metrics = fundamentals.get("metrics", {})
+        summary = fundamentals.get("summary", "")
+        risks = result.get("risks", [])
+
+        if metrics:
+            st.subheader("Key Financial Metrics")
+            m_cols = st.columns(len(metrics))
+            for col, (k, v) in zip(m_cols, metrics.items()):
+                label = k.replace("_", " ").title()
+                col.metric(label, v)
+
+        if summary:
+            st.subheader("Performance Summary")
+            st.write(summary)
+
+        if risks:
+            st.subheader("Key Risks Identified")
+            for r in risks:
+                st.markdown(f"- {r}")
 
 with tab_review:
     st.subheader("Human-in-the-Loop Review")
