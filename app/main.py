@@ -12,7 +12,10 @@ from app.services.document_ingestion import (
     extract_text,
     ingest_document_text,
     get_indexed_tickers,
+    get_indexed_summary,
     is_ticker_indexed,
+    detect_ticker_from_filename,
+    clear_vector_store,
 )
 
 st.set_page_config(
@@ -204,61 +207,49 @@ header[data-testid="stHeader"] {
 # ── Sidebar ──
 with st.sidebar:
     st.markdown("""
-    <div style="text-align:center; padding: 1rem 0 0.5rem;">
-        <div style="font-size: 2.5rem;">📊</div>
-        <div style="font-size: 1.1rem; font-weight: 700; color: #e2e8f0; margin-top: 0.3rem;">
+    <div style="text-align:center; padding: 0.5rem 0 0.5rem;">
+        <div style="font-size: 2.2rem;">📊</div>
+        <div style="font-size: 1.05rem; font-weight: 700; color: #e2e8f0; margin-top: 0.2rem;">
             Research Control Center
         </div>
-        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem;">
+        <div style="font-size: 0.72rem; color: rgba(255,255,255,0.5);">
             Multi-Agent Equity Research Platform
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.divider()
-
-    # System info cards
+    # Combined system status card
     st.markdown("""
-    <div class="info-card">
-        <h4>🤖 Language Model</h4>
-        <div class="value">Gemini 1.5 Flash</div>
-        <div style="margin-top:4px;">
-            <span class="status-pill pill-green">● Online</span>
-            <span style="color:#94a3b8; font-size:0.78rem; margin-left:8px;">temp: 0.1</span>
+    <div class="info-card" style="padding: 0.8rem 1rem; margin-bottom: 0.8rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:0.75rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">🤖 LLM</span>
+            <span class="status-pill pill-green">Gemini 1.5 Flash</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.75rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">🗄️ Vector DB</span>
+            <span class="status-pill pill-blue">ChromaDB</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="info-card">
-        <h4>🗄️ Vector Database</h4>
-        <div class="value">ChromaDB</div>
-        <div style="margin-top:4px;">
-            <span class="status-pill pill-blue">financial_filings</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.divider()
 
     # Indexed companies
     indexed_list = get_indexed_tickers()
-    st.markdown("""
-    <div class="section-heading">
+    st.markdown(f"""
+    <div class="section-heading" style="margin-bottom: 8px;">
         <div class="accent-bar"></div>
-        <h3>Indexed Companies</h3>
+        <h3 style="font-size:0.95rem;">Indexed Companies ({len(indexed_list)})</h3>
     </div>
     """, unsafe_allow_html=True)
 
     if indexed_list:
         chips_html = "".join(
-            f'<span class="ticker-chip">📄 {t}</span>' for t in indexed_list
+            f'<span class="ticker-chip" style="margin:2px;">📈 {t}</span>' for t in indexed_list
         )
-        st.markdown(f'<div style="display:flex; flex-wrap:wrap; gap:4px;">{chips_html}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">{chips_html}</div>', unsafe_allow_html=True)
     else:
         st.caption("No filings indexed yet.")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
     st.caption("Theme 15 • Multi-Agent Research with HITL Review")
 
 
@@ -281,41 +272,64 @@ tab_ingest, tab_analysis, tab_review = st.tabs([
 # TAB 1 — Document Ingestion
 # ═══════════════════════════════════════════════════════
 with tab_ingest:
+    # ── Educational Guide for Students / First-time Users ──
+    with st.expander("💡 **What is 'Indexing' and How Does it Work? (Click to learn)**", expanded=False):
+        st.markdown("""
+        **1. What is a Stock Ticker vs. a Document?**
+        - A **Stock Ticker** is a company code (e.g. `AAPL` for Apple, `NVDA` for Nvidia, `META` for Meta, `INFY` for Infosys).
+        - A **Document** is a specific filing or report (e.g. 10-K annual report, quarterly presentation).
+        - Multiple documents can belong to the same stock, or each document can belong to a different stock.
+
+        **2. What does "Indexing" actually mean?**
+        - In an AI platform, "Indexing" means:
+          1. **Extracting** the raw text from your PDF or TXT files.
+          2. **Chunking** the text into digestible paragraphs (~1,500 characters).
+          3. **Embedding** each chunk into numerical AI vectors using Google Gemini.
+          4. **Storing** the vectors into **ChromaDB** tagged with the company ticker.
+        - Once indexed, our **RAG (Retrieval-Augmented Generation)** agents can instantly retrieve exact facts, risks, and numbers from the filings when performing research!
+
+        **3. What do you do after indexing?**
+        - Once your companies appear below in **Knowledge Base Status**, switch to the **🔬 Research & Analysis** tab to run multi-agent financial research on any of them!
+        """)
+
     st.markdown("""
     <div class="section-heading">
         <div class="accent-bar"></div>
-        <h3>Upload SEC Filings & Reports</h3>
+        <h3>Upload SEC Filings & Research Reports</h3>
     </div>
     """, unsafe_allow_html=True)
-    st.caption("Index 10-K, 10-Q, or market research files into the ChromaDB vector store for RAG-powered analysis.")
-
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.caption("Upload company filings (.pdf, .txt). The system will auto-detect the stock ticker from the filename or use your default.")
 
     ingest_col1, ingest_col2 = st.columns([1, 2])
     with ingest_col1:
-        ingest_ticker = st.text_input(
-            "🏷️ Stock Ticker",
+        default_ticker = st.text_input(
+            "🏷️ Default Stock Ticker",
             value="AAPL",
             key="ingest_ticker_input",
-            help="Enter the ticker symbol for the company whose filing you are uploading.",
+            help="Fallback ticker to assign if not automatically detected from the filename.",
         ).upper().strip()
     with ingest_col2:
         uploaded_files = st.file_uploader(
-            f"📎 Drop filing documents for **{ingest_ticker}**",
+            "📎 Drop filing documents (.pdf, .txt)",
             type=["txt", "pdf"],
             accept_multiple_files=True,
             key="general_uploader",
         )
 
     if uploaded_files:
-        st.markdown(
-            f'<div class="kb-status kb-ready">'
-            f'<span class="icon">📄</span>'
-            f'<span class="text">Selected <strong>{len(uploaded_files)}</strong> document(s) for <strong>{ingest_ticker}</strong></span>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-        if st.button(f"⚡ Process & Index to ChromaDB ({ingest_ticker})", type="primary", use_container_width=True):
+        st.markdown("##### 📋 Uploaded Files & Detected Tickers")
+        preview_rows = []
+        for up_file in uploaded_files:
+            detected = detect_ticker_from_filename(up_file.name) or default_ticker
+            preview_rows.append({
+                "Document Name": up_file.name,
+                "Assigned Stock": detected,
+                "Size": f"{len(up_file.getvalue()) / 1024:.1f} KB",
+                "Detection": "Auto-detected from name" if detect_ticker_from_filename(up_file.name) else f"Fallback to {default_ticker}",
+            })
+        st.dataframe(preview_rows, use_container_width=True)
+
+        if st.button(f"⚡ Process & Index {len(uploaded_files)} Document(s) to ChromaDB", type="primary", use_container_width=True):
             progress_bar = st.progress(0.0, text=f"Preparing {len(uploaded_files)} document(s)...")
             status_text = st.empty()
             total_chunks = 0
@@ -323,7 +337,8 @@ with tab_ingest:
 
             try:
                 for file_idx, up_file in enumerate(uploaded_files):
-                    status_text.info(f"📖 Reading **{up_file.name}** ({file_idx + 1}/{n_files})...")
+                    file_ticker = detect_ticker_from_filename(up_file.name) or default_ticker
+                    status_text.info(f"📖 Reading **{up_file.name}** for **{file_ticker}** ({file_idx + 1}/{n_files})...")
                     text = extract_text(up_file, up_file.name)
                     if not text.strip():
                         continue
@@ -335,7 +350,7 @@ with tab_ingest:
                     chunks = ingest_document_text(
                         text=text,
                         filename=up_file.name,
-                        ticker=ingest_ticker,
+                        ticker=file_ticker,
                         progress_callback=on_progress,
                     )
                     total_chunks += chunks
@@ -344,7 +359,7 @@ with tab_ingest:
                 status_text.empty()
 
                 if total_chunks > 0:
-                    st.success(f"✅ Successfully indexed **{total_chunks} chunks** into ChromaDB for **{ingest_ticker}**!")
+                    st.success(f"✅ Successfully indexed **{total_chunks} chunks** into ChromaDB across {n_files} filing(s)!")
                     st.balloons()
                     st.rerun()
                 else:
@@ -366,7 +381,7 @@ with tab_ingest:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Currently indexed stocks
+    # ── Knowledge Base Status ──
     st.markdown("""
     <div class="section-heading">
         <div class="accent-bar"></div>
@@ -374,14 +389,52 @@ with tab_ingest:
     </div>
     """, unsafe_allow_html=True)
 
-    current_indexed = get_indexed_tickers()
-    if current_indexed:
-        chips_html = "".join(
-            f'<span class="ticker-chip">📄 {t} — Indexed</span>' for t in current_indexed
-        )
-        st.markdown(f'<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">{chips_html}</div>', unsafe_allow_html=True)
+    kb_summary = get_indexed_summary()
+    if kb_summary:
+        total_companies = len(kb_summary)
+        total_docs = sum(len(s["documents"]) for s in kb_summary)
+        total_chunks = sum(s["total_chunks"] for s in kb_summary)
+
+        # 3 stat cards
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.metric("🏢 Indexed Stocks", f"{total_companies} Companies")
+        with m2:
+            st.metric("📑 Stored Filings", f"{total_docs} Documents")
+        with m3:
+            st.metric("🧩 Total Vectors", f"{total_chunks} Chunks")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown("##### 📁 Breakdown by Company")
+        for s in kb_summary:
+            c_ticker = s["ticker"]
+            c_docs = s["documents"]
+            c_chunks = s["total_chunks"]
+            with st.expander(f"📈 **{c_ticker}** — {c_chunks} chunks ({len(c_docs)} document{'s' if len(c_docs) > 1 else ''})", expanded=True):
+                for doc_name, doc_count in c_docs.items():
+                    st.markdown(f"- 📄 `{doc_name}` • **{doc_count} chunks** ready for RAG")
+
+        st.markdown("""
+        <div class="kb-status kb-ready" style="margin-top: 1.2rem;">
+            <span class="icon">👉</span>
+            <span class="text"><strong>Ready for Research:</strong> Switch to the <strong>🔬 Research & Analysis</strong> tab to analyze any of these companies!</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Vector store maintenance
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.expander("⚙️ Advanced: Vector Store Management", expanded=False):
+            st.warning("Resetting the vector store will erase all indexed documents from ChromaDB.")
+            confirm_reset = st.checkbox("I confirm I want to clear all indexed documents", key="chk_clear_store")
+            if st.button("🗑️ Clear ChromaDB Vector Store", type="secondary", disabled=not confirm_reset):
+                if clear_vector_store():
+                    st.success("Vector store cleared successfully!")
+                    st.rerun()
+                else:
+                    st.error("Failed to clear vector store.")
     else:
-        st.info("No filings currently indexed. Upload a 10-K or 10-Q filing above to get started.")
+        st.info("No filings currently indexed. Upload a 10-K, 10-Q, or earnings PDF above to get started.")
 
 
 # ═══════════════════════════════════════════════════════
@@ -401,13 +454,17 @@ with tab_analysis:
     with col2:
         benchmark = st.text_input("📊 Benchmark Ticker", value="MSFT").upper().strip()
 
+    indexed_tickers = get_indexed_tickers()
+    if indexed_tickers:
+        st.caption("⚡ **Currently Indexed Stocks:** " + "  •  ".join(f"`{t}`" for t in indexed_tickers))
+
     # Knowledge base check with styled banner
     is_indexed = is_ticker_indexed(ticker)
     if is_indexed:
         st.markdown(
             f'<div class="kb-status kb-ready">'
             f'<span class="icon">✅</span>'
-            f'<span class="text"><strong>Knowledge Base Ready</strong> — SEC 10-K filings for <strong>{ticker}</strong> are indexed and available for RAG extraction.</span>'
+            f'<span class="text"><strong>Knowledge Base Ready</strong> — Filings for <strong>{ticker}</strong> are indexed and available for RAG extraction.</span>'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -428,14 +485,17 @@ with tab_analysis:
             if inline_file is not None:
                 if st.button(f"⚡ Index Filing for {ticker}", key=f"btn_index_{ticker}", use_container_width=True):
                     with st.spinner(f"Extracting and indexing {inline_file.name} for {ticker}..."):
-                        text = extract_text(inline_file, inline_file.name)
-                        chunks = ingest_document_text(text, inline_file.name, ticker)
-                        if chunks > 0:
-                            st.success(f"Indexed {chunks} chunks for {ticker}!")
-                            st.balloons()
-                            st.rerun()
-                        else:
-                            st.error("Failed to parse text from the uploaded file.")
+                        try:
+                            text = extract_text(inline_file, inline_file.name)
+                            chunks = ingest_document_text(text, inline_file.name, ticker)
+                            if chunks > 0:
+                                st.success(f"Indexed {chunks} chunks for {ticker}!")
+                                st.balloons()
+                                st.rerun()
+                            else:
+                                st.error("Failed to parse text from the uploaded file.")
+                        except Exception as e:
+                            st.error(f"Indexing error: {e}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
