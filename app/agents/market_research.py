@@ -24,11 +24,25 @@ def market_research_node(state: AgentState) -> AgentState:
     # pull relevant chunks from chroma
     store = get_vector_store()
     query = f"{ticker} financial results revenue operating income risk factors"
-    docs = store.similarity_search(query, k=4)
+    docs = []
+    try:
+        docs = store.similarity_search(query, k=4, filter={"ticker": ticker})
+    except Exception:
+        docs = []
 
     if not docs:
-        state["fundamentals"] = {"summary": f"No filing data found for {ticker}."}
-        state["risks"] = []
+        all_docs = store.similarity_search(query, k=4)
+        if ticker == "AAPL":
+            docs = all_docs
+        else:
+            docs = [d for d in all_docs if d.metadata.get("ticker") == ticker]
+
+    if not docs:
+        state["fundamentals"] = {
+            "metrics": {},
+            "summary": f"No SEC filing data found for {ticker} in vector database. Please upload a 10-K filing to extract fundamentals.",
+        }
+        state["risks"] = [f"No 10-K filing available in ChromaDB for {ticker}."]
         return state
 
     context = "\n\n".join([doc.page_content for doc in docs])
