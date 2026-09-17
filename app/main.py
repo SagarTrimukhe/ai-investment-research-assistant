@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import streamlit as st
 from app.agents.market_research import market_research_node
 from app.agents.trend_analysis import trend_analysis_node
+from app.integrations.market_data import fetch_stock_overview, fetch_price_history
 
 st.set_page_config(
     page_title="AI Investment Research Assistant",
@@ -39,11 +40,43 @@ with tab_analysis:
     st.subheader("Run Multi-Agent Analysis")
     col1, col2 = st.columns(2)
     with col1:
-        ticker = st.text_input("Target Ticker", value="AAPL")
+        ticker = st.text_input("Target Ticker", value="AAPL").upper().strip()
     with col2:
-        benchmark = st.text_input("Benchmark Ticker", value="MSFT")
+        benchmark = st.text_input("Benchmark Ticker", value="MSFT").upper().strip()
 
-    if st.button("Start Research Workflow"):
+    # interactive market price action & chart
+    with st.expander(f"📈 Market Price Action — {ticker}", expanded=True):
+        m_head_col, m_period_col = st.columns([3, 1])
+        with m_period_col:
+            period = st.selectbox(
+                "Timeframe",
+                options=["1mo", "3mo", "6mo", "1y", "ytd"],
+                index=2,
+                key="price_period",
+            )
+
+        overview = fetch_stock_overview(ticker)
+        if overview and overview.get("current_price"):
+            c1, c2, c3 = st.columns(3)
+            c1.metric(
+                label=f"{ticker} Current Price",
+                value=f"${overview['current_price']:.2f}",
+                delta=f"{overview['change']:+.2f} ({overview['change_pct']:+.2f}%)",
+            )
+            if overview.get("fifty_two_week_high"):
+                c2.metric("52-Week High", f"${overview['fifty_two_week_high']:.2f}")
+            if overview.get("fifty_two_week_low"):
+                c3.metric("52-Week Low", f"${overview['fifty_two_week_low']:.2f}")
+
+        history_df = fetch_price_history(ticker, period=period)
+        if not history_df.empty:
+            st.line_chart(history_df["Close"])
+        else:
+            st.caption(f"No price history found for {ticker}.")
+
+    st.markdown("---")
+
+    if st.button("Start Research Workflow", type="primary"):
         # step 1: market research (10-K RAG)
         with st.spinner(f"Running market research agent for {ticker}..."):
             state = {"ticker": ticker}
