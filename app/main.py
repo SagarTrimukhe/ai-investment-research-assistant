@@ -316,18 +316,53 @@ with tab_ingest:
             unsafe_allow_html=True,
         )
         if st.button(f"⚡ Process & Index to ChromaDB ({ingest_ticker})", type="primary", use_container_width=True):
+            progress_bar = st.progress(0.0, text=f"Preparing {len(uploaded_files)} document(s)...")
+            status_text = st.empty()
             total_chunks = 0
-            with st.spinner(f"Extracting, chunking, and embedding documents for {ingest_ticker}..."):
-                for up_file in uploaded_files:
+            n_files = len(uploaded_files)
+
+            try:
+                for file_idx, up_file in enumerate(uploaded_files):
+                    status_text.info(f"📖 Reading **{up_file.name}** ({file_idx + 1}/{n_files})...")
                     text = extract_text(up_file, up_file.name)
-                    chunks = ingest_document_text(text, up_file.name, ingest_ticker)
+                    if not text.strip():
+                        continue
+
+                    def on_progress(current, total, msg):
+                        file_fraction = (file_idx + (current / max(total, 1))) / n_files
+                        progress_bar.progress(min(0.99, file_fraction), text=f"[{file_idx + 1}/{n_files}] {msg}")
+
+                    chunks = ingest_document_text(
+                        text=text,
+                        filename=up_file.name,
+                        ticker=ingest_ticker,
+                        progress_callback=on_progress,
+                    )
                     total_chunks += chunks
-            if total_chunks > 0:
-                st.success(f"✅ Indexed **{total_chunks} chunks** into ChromaDB for **{ingest_ticker}**!")
-                st.balloons()
-                st.rerun()
-            else:
-                st.error("Could not extract readable text from the uploaded files.")
+
+                progress_bar.progress(1.0, text="✨ Processing complete!")
+                status_text.empty()
+
+                if total_chunks > 0:
+                    st.success(f"✅ Successfully indexed **{total_chunks} chunks** into ChromaDB for **{ingest_ticker}**!")
+                    st.balloons()
+                    st.rerun()
+                else:
+                    st.error("Could not extract readable text from the uploaded files.")
+            except Exception as exc:
+                progress_bar.empty()
+                status_text.empty()
+                err_text = str(exc)
+                if "429" in err_text or "quota" in err_text.lower():
+                    st.error(
+                        f"⏳ **Gemini Free Tier Quota Exceeded (100 RPM)**\n\n"
+                        f"Google Gemini Free Tier limits embeddings to **100 requests per minute**.\n\n"
+                        f"- Chunks indexed before limit: **{total_chunks}**\n"
+                        f"- Please wait about **60 seconds** for the rate limit window to reset, then click Process again.\n\n"
+                        f"*Tip: Indexing one document at a time helps stay smoothly under free-tier limits.*"
+                    )
+                else:
+                    st.error(f"❌ Ingestion error: {err_text}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
