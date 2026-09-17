@@ -1,4 +1,4 @@
-from langgraph.checkpoint import interrupt
+from langgraph.types import interrupt
 from app.core.state import AgentState
 
 
