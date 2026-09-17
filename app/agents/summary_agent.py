@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional  # noqa
 from pydantic import BaseModel, Field
 from app.core.state import AgentState
 from app.core.llm import get_llm
