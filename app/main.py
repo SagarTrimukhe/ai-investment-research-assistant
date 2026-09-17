@@ -5,8 +5,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import streamlit as st
-from app.agents.market_research import market_research_node
-from app.agents.trend_analysis import trend_analysis_node
+from app.services.workflow_service import WorkflowService
 from app.integrations.market_data import fetch_stock_overview, fetch_price_history
 from app.services.document_ingestion import (
     extract_text,
@@ -536,19 +535,37 @@ with tab_analysis:
     else:
         st.caption(f"No price history found for {ticker}.")
 
-    st.markdown("---")
+    st.markdown("""
+    <div style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 0.6rem 1rem; margin-bottom: 1rem; font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <span style="font-weight: 600; color: #38bdf8;">LangGraph Pipeline:</span>
+        <code>START</code> <span>➔</span>
+        <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Node: market_research</span>
+        <span>➔</span>
+        <span style="background: rgba(168, 85, 247, 0.12); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Node: trend_analysis</span>
+        <span>➔</span>
+        <code>END</code>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.button("🚀 Run AI Research on This Stock", type="primary", use_container_width=True):
-        # step 1: market research (10-K RAG)
-        with st.spinner(f"🤖 Agent 1 of 2 — digging through {ticker} filings..."):
-            state = {"ticker": ticker}
-            state = market_research_node(state)
+        workflow = WorkflowService()
+        state = {"ticker": ticker}
 
-        # step 2: trend and sentiment analysis
-        with st.spinner(f"🤖 Agent 2 of 2 — checking {ticker} trends and market mood..."):
-            state = trend_analysis_node(state)
+        status_box = st.status(f"⚡ Running LangGraph workflow for **{ticker}**...", expanded=True)
+        with status_box:
+            st.write("📍 **Edge 1:** Traversing `START` ➔ `market_research` node...")
+            for step in workflow.stream({"ticker": ticker}):
+                for node_name, updated_state in step.items():
+                    state.update(updated_state)
+                    if node_name == "market_research":
+                        st.write("✅ **Node 1 Complete:** `market_research` (10-K RAG fundamentals extracted)")
+                        st.write("📍 **Edge 2:** Traversing `market_research` ➔ `trend_analysis` node...")
+                    elif node_name == "trend_analysis":
+                        st.write("✅ **Node 2 Complete:** `trend_analysis` (market sentiment & sector trends analyzed)")
+                        st.write("🏁 **Edge 3:** Traversing `trend_analysis` ➔ `END`")
+            status_box.update(label=f"✅ LangGraph workflow complete for {ticker}!", state="complete", expanded=False)
 
-        st.success(f"✅ Done! Here's what we found for **{ticker}**")
+        st.success(f"Done! Here's what we found for **{ticker}**")
 
         # display fundamental metrics
         fundamentals = state.get("fundamentals", {})
