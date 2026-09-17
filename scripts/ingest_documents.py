@@ -4,8 +4,14 @@ import sys
 # allow importing from app directory when run as a standalone script
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from pydantic import BaseModel
 from app.integrations.vector_store import get_vector_store
 from app.utils.text_splitter import get_text_splitter
+
+
+class DocumentChunkMetadata(BaseModel):
+    source: str
+    chunk_id: int
 
 
 def ingest_file(file_path):
@@ -17,12 +23,18 @@ def ingest_file(file_path):
     chunks = splitter.split_text(text)
     print(f"Split into {len(chunks)} chunks.")
 
+    # validate metadata schema using pydantic
+    metadatas = [
+        DocumentChunkMetadata(
+            source=os.path.basename(file_path),
+            chunk_id=i
+        ).model_dump()
+        for i in range(len(chunks))
+    ]
+
     # push chunks into chroma
     vector_store = get_vector_store()
-    vector_store.add_texts(
-        texts=chunks,
-        metadatas=[{"source": os.path.basename(file_path), "chunk_id": i} for i in range(len(chunks))]
-    )
+    vector_store.add_texts(texts=chunks, metadatas=metadatas)
     print("Successfully saved chunks to ChromaDB!")
 
 
