@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import streamlit as st
 from app.agents.market_research import market_research_node
+from app.agents.trend_analysis import trend_analysis_node
 
 st.set_page_config(
     page_title="AI Investment Research Assistant",
@@ -43,16 +44,22 @@ with tab_analysis:
         benchmark = st.text_input("Benchmark Ticker", value="MSFT")
 
     if st.button("Start Research Workflow"):
+        # step 1: market research (10-K RAG)
         with st.spinner(f"Running market research agent for {ticker}..."):
             state = {"ticker": ticker}
-            result = market_research_node(state)
+            state = market_research_node(state)
 
-        st.success(f"Market research completed for {ticker}")
+        # step 2: trend and sentiment analysis
+        with st.spinner(f"Analyzing market trends and sentiment for {ticker}..."):
+            state = trend_analysis_node(state)
 
-        fundamentals = result.get("fundamentals", {})
+        st.success(f"Analysis completed for {ticker}")
+
+        # display fundamental metrics
+        fundamentals = state.get("fundamentals", {})
         metrics = fundamentals.get("metrics", {})
         summary = fundamentals.get("summary", "")
-        risks = result.get("risks", [])
+        risks = state.get("risks", [])
 
         if metrics:
             st.subheader("Key Financial Metrics")
@@ -65,8 +72,34 @@ with tab_analysis:
             st.subheader("Performance Summary")
             st.write(summary)
 
+        # display market sentiment & sector trends
+        sentiment = state.get("sentiment", {})
+        if sentiment:
+            st.subheader("Market Sentiment & Sector Trends")
+            s_col1, s_col2 = st.columns(2)
+            with s_col1:
+                st.metric("Sentiment Label", sentiment.get("label", "Neutral"))
+            with s_col2:
+                st.metric("Sentiment Score", f"{sentiment.get('score', 0.0):+.2f}")
+
+            if sentiment.get("summary"):
+                st.write(sentiment.get("summary"))
+
+            tailwinds = sentiment.get("sector_tailwinds", [])
+            if tailwinds:
+                st.markdown("**Sector Catalysts & Tailwinds:**")
+                for item in tailwinds:
+                    st.markdown(f"- {item}")
+
+            macro_risks = sentiment.get("macro_risks", [])
+            if macro_risks:
+                st.markdown("**Macro & Regulatory Headwinds:**")
+                for item in macro_risks:
+                    st.markdown(f"- {item}")
+
+        # display filing risk factors
         if risks:
-            st.subheader("Key Risks Identified")
+            st.subheader("SEC Filing Risks")
             for r in risks:
                 st.markdown(f"- {r}")
 
