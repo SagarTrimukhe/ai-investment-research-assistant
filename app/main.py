@@ -210,10 +210,10 @@ with st.sidebar:
     <div style="text-align:center; padding: 0.5rem 0 0.5rem;">
         <div style="font-size: 2.2rem;">📊</div>
         <div style="font-size: 1.05rem; font-weight: 700; color: #e2e8f0; margin-top: 0.2rem;">
-            Research Control Center
+            Dashboard
         </div>
         <div style="font-size: 0.72rem; color: rgba(255,255,255,0.5);">
-            Multi-Agent Equity Research Platform
+            AI Stock Research — College Project
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -250,21 +250,21 @@ with st.sidebar:
         st.caption("No filings indexed yet.")
 
     st.divider()
-    st.caption("Theme 15 • Multi-Agent Research with HITL Review")
+    st.caption("Theme 15 • Built with LangChain + Gemini + ChromaDB")
 
 
 # ── Main content header ──
 st.markdown("""
 <div class="main-header">
-    <h1>📊 AI Investment Research Assistant</h1>
-    <p>Theme 15 — Multi-Agent Equity Research with Human-in-the-Loop Review</p>
+    <h1>📊 AI Stock Research Helper</h1>
+    <p>Our college project — upload company reports, and let AI agents do the research for you!</p>
 </div>
 """, unsafe_allow_html=True)
 
 tab_ingest, tab_analysis, tab_review = st.tabs([
-    "📁 Document Ingestion",
-    "🔬 Research & Analysis",
-    "✅ Analyst Review (HITL)",
+    "📁 Upload Documents",
+    "🔬 Run Analysis",
+    "✅ Review Results",
 ])
 
 
@@ -273,51 +273,52 @@ tab_ingest, tab_analysis, tab_review = st.tabs([
 # ═══════════════════════════════════════════════════════
 with tab_ingest:
     # ── Educational Guide for Students / First-time Users ──
-    with st.expander("💡 **What is 'Indexing' and How Does it Work? (Click to learn)**", expanded=False):
+    with st.expander("💡 **New here? Click to learn how this works!**", expanded=False):
         st.markdown("""
-        **1. What is a Stock Ticker vs. a Document?**
-        - A **Stock Ticker** is a company code (e.g. `AAPL` for Apple, `NVDA` for Nvidia, `META` for Meta, `INFY` for Infosys).
-        - A **Document** is a specific filing or report (e.g. 10-K annual report, quarterly presentation).
-        - Multiple documents can belong to the same stock, or each document can belong to a different stock.
+        **Hey! Here's a quick walkthrough 👋**
 
-        **2. What does "Indexing" actually mean?**
-        - In an AI platform, "Indexing" means:
-          1. **Extracting** the raw text from your PDF or TXT files.
-          2. **Chunking** the text into digestible paragraphs (~1,500 characters).
-          3. **Embedding** each chunk into numerical AI vectors using Google Gemini.
-          4. **Storing** the vectors into **ChromaDB** tagged with the company ticker.
-        - Once indexed, our **RAG (Retrieval-Augmented Generation)** agents can instantly retrieve exact facts, risks, and numbers from the filings when performing research!
+        **What's a Stock Ticker?**
+        It's just a short code for a company — like `AAPL` = Apple, `NVDA` = Nvidia, `META` = Meta/Facebook, `INFY` = Infosys.
 
-        **3. What do you do after indexing?**
-        - Once your companies appear below in **Knowledge Base Status**, switch to the **🔬 Research & Analysis** tab to run multi-agent financial research on any of them!
+        **What happens when you upload a file?**
+        1. We read the text from your PDF/TXT file
+        2. Break it into smaller paragraphs (we call them "chunks")
+        3. Convert each chunk into numbers ("embeddings") using Google Gemini AI
+        4. Save everything into our ChromaDB database tagged with the company name
+
+        **Why do we do this?**
+        So when you go to the **🔬 Run Analysis** tab and ask our AI to research a stock, it can look up real data from the actual company filings instead of just making stuff up!
+
+        **What's next after uploading?**
+        Once your files show up below, head over to **🔬 Run Analysis** and hit the research button!
         """)
 
     st.markdown("""
     <div class="section-heading">
         <div class="accent-bar"></div>
-        <h3>Upload SEC Filings & Research Reports</h3>
+        <h3>Upload Company Reports</h3>
     </div>
     """, unsafe_allow_html=True)
-    st.caption("Upload company filings (.pdf, .txt). The system will auto-detect the stock ticker from the filename or use your default.")
+    st.caption("Drop any company report here (.pdf or .txt) — we'll figure out which stock it belongs to from the filename!")
 
     ingest_col1, ingest_col2 = st.columns([1, 2])
     with ingest_col1:
         default_ticker = st.text_input(
-            "🏷️ Default Stock Ticker",
+            "🏷️ Stock Code",
             value="AAPL",
             key="ingest_ticker_input",
-            help="Fallback ticker to assign if not automatically detected from the filename.",
+            help="If we can't figure out the company from the filename, we'll use this as default.",
         ).upper().strip()
     with ingest_col2:
         uploaded_files = st.file_uploader(
-            "📎 Drop filing documents (.pdf, .txt)",
+            "📎 Drop your files here",
             type=["txt", "pdf"],
             accept_multiple_files=True,
             key="general_uploader",
         )
 
     if uploaded_files:
-        st.markdown("##### 📋 Uploaded Files & Detected Tickers")
+        st.markdown("##### 📋 Here's what we found in your files")
         preview_rows = []
         for up_file in uploaded_files:
             detected = detect_ticker_from_filename(up_file.name) or default_ticker
@@ -325,12 +326,12 @@ with tab_ingest:
                 "Document Name": up_file.name,
                 "Assigned Stock": detected,
                 "Size": f"{len(up_file.getvalue()) / 1024:.1f} KB",
-                "Detection": "Auto-detected from name" if detect_ticker_from_filename(up_file.name) else f"Fallback to {default_ticker}",
+                "How we knew": "Figured it out from filename ✨" if detect_ticker_from_filename(up_file.name) else f"Using your default: {default_ticker}",
             })
         st.dataframe(preview_rows, use_container_width=True)
 
-        if st.button(f"⚡ Process & Index {len(uploaded_files)} Document(s) to ChromaDB", type="primary", use_container_width=True):
-            progress_bar = st.progress(0.0, text=f"Preparing {len(uploaded_files)} document(s)...")
+        if st.button(f"🚀 Upload & Save {len(uploaded_files)} File(s) to Database", type="primary", use_container_width=True):
+            progress_bar = st.progress(0.0, text=f"Getting {len(uploaded_files)} file(s) ready...")
             status_text = st.empty()
             total_chunks = 0
             n_files = len(uploaded_files)
@@ -338,7 +339,7 @@ with tab_ingest:
             try:
                 for file_idx, up_file in enumerate(uploaded_files):
                     file_ticker = detect_ticker_from_filename(up_file.name) or default_ticker
-                    status_text.info(f"📖 Reading **{up_file.name}** for **{file_ticker}** ({file_idx + 1}/{n_files})...")
+                    status_text.info(f"📖 Reading **{up_file.name}** ({file_ticker}) — file {file_idx + 1} of {n_files}...")
                     text = extract_text(up_file, up_file.name)
                     if not text.strip():
                         continue
@@ -355,37 +356,37 @@ with tab_ingest:
                     )
                     total_chunks += chunks
 
-                progress_bar.progress(1.0, text="✨ Processing complete!")
+                progress_bar.progress(1.0, text="✨ All done!")
                 status_text.empty()
 
                 if total_chunks > 0:
-                    st.success(f"✅ Successfully indexed **{total_chunks} chunks** into ChromaDB across {n_files} filing(s)!")
+                    st.success(f"✅ Nice! Saved **{total_chunks} text chunks** from {n_files} file(s) into our database!")
                     st.balloons()
                     st.rerun()
                 else:
-                    st.error("Could not extract readable text from the uploaded files.")
+                    st.error("Hmm, couldn't read any text from those files. Are they scanned images maybe?")
             except Exception as exc:
                 progress_bar.empty()
                 status_text.empty()
                 err_text = str(exc)
                 if "429" in err_text or "quota" in err_text.lower():
                     st.error(
-                        f"⏳ **Gemini Free Tier Quota Exceeded (100 RPM)**\n\n"
-                        f"Google Gemini Free Tier limits embeddings to **100 requests per minute**.\n\n"
-                        f"- Chunks indexed before limit: **{total_chunks}**\n"
-                        f"- Please wait about **60 seconds** for the rate limit window to reset, then click Process again.\n\n"
-                        f"*Tip: Indexing one document at a time helps stay smoothly under free-tier limits.*"
+                        f"⏳ **Whoa, too many requests!**\n\n"
+                        f"Google's free API only allows 100 requests per minute and we hit that limit.\n\n"
+                        f"- We managed to save **{total_chunks}** chunks before it stopped\n"
+                        f"- Just wait about **60 seconds** and try again — it'll pick up where it left off\n\n"
+                        f"*Pro tip: uploading one file at a time is easier on the free tier!*"
                     )
                 else:
-                    st.error(f"❌ Ingestion error: {err_text}")
+                    st.error(f"❌ Something went wrong: {err_text}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Knowledge Base Status ──
+    # ── What's in our database ──
     st.markdown("""
     <div class="section-heading">
         <div class="accent-bar"></div>
-        <h3>Knowledge Base Status</h3>
+        <h3>What's in Our Database So Far</h3>
     </div>
     """, unsafe_allow_html=True)
 
@@ -398,43 +399,43 @@ with tab_ingest:
         # 3 stat cards
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.metric("🏢 Indexed Stocks", f"{total_companies} Companies")
+            st.metric("🏢 Companies", f"{total_companies}")
         with m2:
-            st.metric("📑 Stored Filings", f"{total_docs} Documents")
+            st.metric("📑 Files Stored", f"{total_docs}")
         with m3:
-            st.metric("🧩 Total Vectors", f"{total_chunks} Chunks")
+            st.metric("🧩 Text Chunks", f"{total_chunks}")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        st.markdown("##### 📁 Breakdown by Company")
+        st.markdown("##### 📁 Company-wise Details")
         for s in kb_summary:
             c_ticker = s["ticker"]
             c_docs = s["documents"]
             c_chunks = s["total_chunks"]
-            with st.expander(f"📈 **{c_ticker}** — {c_chunks} chunks ({len(c_docs)} document{'s' if len(c_docs) > 1 else ''})", expanded=True):
+            with st.expander(f"📈 **{c_ticker}** — {c_chunks} chunks from {len(c_docs)} file{'s' if len(c_docs) > 1 else ''}", expanded=True):
                 for doc_name, doc_count in c_docs.items():
-                    st.markdown(f"- 📄 `{doc_name}` • **{doc_count} chunks** ready for RAG")
+                    st.markdown(f"- 📄 `{doc_name}` — {doc_count} chunks saved")
 
         st.markdown("""
         <div class="kb-status kb-ready" style="margin-top: 1.2rem;">
             <span class="icon">👉</span>
-            <span class="text"><strong>Ready for Research:</strong> Switch to the <strong>🔬 Research & Analysis</strong> tab to analyze any of these companies!</span>
+            <span class="text"><strong>You're all set!</strong> Now go to the <strong>🔬 Run Analysis</strong> tab and let the AI agents research these companies for you!</span>
         </div>
         """, unsafe_allow_html=True)
 
         # Vector store maintenance
         st.markdown("<br>", unsafe_allow_html=True)
-        with st.expander("⚙️ Advanced: Vector Store Management", expanded=False):
-            st.warning("Resetting the vector store will erase all indexed documents from ChromaDB.")
-            confirm_reset = st.checkbox("I confirm I want to clear all indexed documents", key="chk_clear_store")
-            if st.button("🗑️ Clear ChromaDB Vector Store", type="secondary", disabled=not confirm_reset):
+        with st.expander("⚙️ Danger Zone — Reset Database", expanded=False):
+            st.warning("⚠️ This will delete everything we've stored. You'll need to re-upload all your files.")
+            confirm_reset = st.checkbox("Yes, I'm sure I want to delete everything", key="chk_clear_store")
+            if st.button("🗑️ Wipe Database Clean", type="secondary", disabled=not confirm_reset):
                 if clear_vector_store():
-                    st.success("Vector store cleared successfully!")
+                    st.success("Database wiped! Upload new files to start fresh.")
                     st.rerun()
                 else:
-                    st.error("Failed to clear vector store.")
+                    st.error("Oops, something went wrong while clearing.")
     else:
-        st.info("No filings currently indexed. Upload a 10-K, 10-Q, or earnings PDF above to get started.")
+        st.info("Nothing here yet! Upload a company report above and we'll store it for analysis.")
 
 
 # ═══════════════════════════════════════════════════════
@@ -444,19 +445,19 @@ with tab_analysis:
     st.markdown("""
     <div class="section-heading">
         <div class="accent-bar"></div>
-        <h3>Configure Analysis</h3>
+        <h3>Pick a Stock to Research</h3>
     </div>
     """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        ticker = st.text_input("🎯 Target Ticker", value="AAPL").upper().strip()
+        ticker = st.text_input("🎯 Which stock to analyze?", value="AAPL").upper().strip()
     with col2:
-        benchmark = st.text_input("📊 Benchmark Ticker", value="MSFT").upper().strip()
+        benchmark = st.text_input("📊 Compare against", value="MSFT").upper().strip()
 
     indexed_tickers = get_indexed_tickers()
     if indexed_tickers:
-        st.caption("⚡ **Currently Indexed Stocks:** " + "  •  ".join(f"`{t}`" for t in indexed_tickers))
+        st.caption("💾 **Stocks we have data for:** " + "  •  ".join(f"`{t}`" for t in indexed_tickers))
 
     # Knowledge base check with styled banner
     is_indexed = is_ticker_indexed(ticker)
@@ -464,7 +465,7 @@ with tab_analysis:
         st.markdown(
             f'<div class="kb-status kb-ready">'
             f'<span class="icon">✅</span>'
-            f'<span class="text"><strong>Knowledge Base Ready</strong> — Filings for <strong>{ticker}</strong> are indexed and available for RAG extraction.</span>'
+            f'<span class="text"><strong>Good to go!</strong> We have reports for <strong>{ticker}</strong> saved in our database — the AI can use them during research.</span>'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -472,30 +473,30 @@ with tab_analysis:
         st.markdown(
             f'<div class="kb-status kb-missing">'
             f'<span class="icon">⚠️</span>'
-            f'<span class="text"><strong>{ticker} not in Knowledge Base</strong> — No SEC filings indexed. Upload a filing below, or proceed with public market data only.</span>'
+            f'<span class="text"><strong>We don\'t have {ticker} files yet</strong> — upload a report below, or just run analysis with live market data only.</span>'
             f'</div>',
             unsafe_allow_html=True,
         )
-        with st.expander(f"📥 Quick Index: Upload a filing for {ticker}", expanded=True):
+        with st.expander(f"📥 Quick upload: Add a report for {ticker}", expanded=True):
             inline_file = st.file_uploader(
-                f"Choose a 10-K / 10-Q filing (.txt or .pdf) for {ticker}",
+                f"Pick a report file (.txt or .pdf) for {ticker}",
                 type=["txt", "pdf"],
                 key=f"inline_uploader_{ticker}",
             )
             if inline_file is not None:
-                if st.button(f"⚡ Index Filing for {ticker}", key=f"btn_index_{ticker}", use_container_width=True):
-                    with st.spinner(f"Extracting and indexing {inline_file.name} for {ticker}..."):
+                if st.button(f"📥 Save {inline_file.name} for {ticker}", key=f"btn_index_{ticker}", use_container_width=True):
+                    with st.spinner(f"Reading and saving {inline_file.name}..."):
                         try:
                             text = extract_text(inline_file, inline_file.name)
                             chunks = ingest_document_text(text, inline_file.name, ticker)
                             if chunks > 0:
-                                st.success(f"Indexed {chunks} chunks for {ticker}!")
+                                st.success(f"Saved {chunks} text chunks for {ticker}! 🎉")
                                 st.balloons()
                                 st.rerun()
                             else:
-                                st.error("Failed to parse text from the uploaded file.")
+                                st.error("Couldn't read text from that file — is it a scanned image?")
                         except Exception as e:
-                            st.error(f"Indexing error: {e}")
+                            st.error(f"Something went wrong: {e}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -537,17 +538,17 @@ with tab_analysis:
 
     st.markdown("---")
 
-    if st.button("🚀 Start Research Workflow", type="primary", use_container_width=True):
+    if st.button("🚀 Run AI Research on This Stock", type="primary", use_container_width=True):
         # step 1: market research (10-K RAG)
-        with st.spinner(f"Agent 1/2 — Running market research for {ticker}..."):
+        with st.spinner(f"🤖 Agent 1 of 2 — digging through {ticker} filings..."):
             state = {"ticker": ticker}
             state = market_research_node(state)
 
         # step 2: trend and sentiment analysis
-        with st.spinner(f"Agent 2/2 — Analyzing trends and sentiment for {ticker}..."):
+        with st.spinner(f"🤖 Agent 2 of 2 — checking {ticker} trends and market mood..."):
             state = trend_analysis_node(state)
 
-        st.success(f"✅ Analysis completed for **{ticker}**")
+        st.success(f"✅ Done! Here's what we found for **{ticker}**")
 
         # display fundamental metrics
         fundamentals = state.get("fundamentals", {})
@@ -647,14 +648,14 @@ with tab_review:
     st.markdown("""
     <div class="section-heading">
         <div class="accent-bar"></div>
-        <h3>Human-in-the-Loop Review Queue</h3>
+        <h3>Review AI Results</h3>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(
         '<div class="kb-status kb-ready">'
         '<span class="icon">📋</span>'
-        '<span class="text">No reports currently waiting for analyst review. Run a research workflow to generate a draft memo.</span>'
+        '<span class="text">Nothing to review yet! Go to the <strong>🔬 Run Analysis</strong> tab first to generate a research report.</span>'
         '</div>',
         unsafe_allow_html=True,
     )
