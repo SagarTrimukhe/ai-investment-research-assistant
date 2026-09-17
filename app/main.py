@@ -213,7 +213,7 @@ with st.sidebar:
             Dashboard
         </div>
         <div style="font-size: 0.72rem; color: rgba(255,255,255,0.5);">
-            AI Stock Research — College Project
+            Powered by Gemini + LangChain + ChromaDB
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -257,7 +257,7 @@ with st.sidebar:
 st.markdown("""
 <div class="main-header">
     <h1>📊 AI Stock Research Helper</h1>
-    <p>Our college project — upload company reports, and let AI agents do the research for you!</p>
+    <p>Upload company reports and let AI research agents extract insights for you!</p>
 </div>
 """, unsafe_allow_html=True)
 
