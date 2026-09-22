@@ -1,5 +1,4 @@
 import os
-import json
 
 
 class ExportService:
@@ -39,7 +38,7 @@ class ExportService:
             lines.append(f"- {cat}")
 
         md_content = "\n".join(lines)
-        print("debug:", md_content[:200])
+        # print("debug:", md_content[:200])
 
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
