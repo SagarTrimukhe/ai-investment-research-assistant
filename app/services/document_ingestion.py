@@ -92,7 +92,7 @@ def ingest_document_text(
                         progress_callback(
                             start_idx,
                             total_chunks,
-                            f"\u23f3 Gemini Rate Limit (100 RPM). Waiting {wait_seconds}s before retrying batch..."
+                            f"⏳ Gemini Rate Limit (100 RPM). Waiting {wait_seconds}s before retrying batch..."
                         )
                     time.sleep(wait_seconds)
                 else:
@@ -106,3 +106,100 @@ def ingest_document_text(
         progress_callback(total_chunks, total_chunks, f"Finished {filename} ({total_ingested} chunks)")
 
     return total_ingested
+
+
+def detect_ticker_from_filename(filename: str) -> Optional[str]:
+    """Infer the stock ticker symbol from common filename patterns."""
+    fn = filename.upper()
+    mapping = {
+        "NVIDIA": "NVDA", "NVDA": "NVDA",
+        "META": "META", "FACEBOOK": "META",
+        "INFOSYS": "INFY", "INFY": "INFY",
+        "APPLE": "AAPL", "AAPL": "AAPL",
+        "MICROSOFT": "MSFT", "MSFT": "MSFT",
+        "GOOGLE": "GOOGL", "ALPHABET": "GOOGL", "GOOGL": "GOOGL", "GOOG": "GOOGL",
+        "AMAZON": "AMZN", "AMZN": "AMZN",
+        "TESLA": "TSLA", "TSLA": "TSLA",
+        "TCS": "TCS", "TATA": "TCS",
+        "RELIANCE": "RELIANCE",
+    }
+    for key, ticker in mapping.items():
+        if key in fn:
+            return ticker
+    return None
+
+
+def get_indexed_tickers() -> List[str]:
+    """Return a sorted list of unique tickers found in ChromaDB."""
+    try:
+        store = get_vector_store()
+        data = store.get()
+        tickers: Set[str] = set()
+        for meta in data.get("metadatas", []):
+            if not meta:
+                continue
+            if "ticker" in meta and meta["ticker"]:
+                tickers.add(meta["ticker"].upper().strip())
+            elif "apple" in meta.get("source", "").lower() or "aapl" in meta.get("source", "").lower():
+                tickers.add("AAPL")
+        return sorted(list(tickers))
+    except Exception as e:
+        print("error getting tickers:", e)
+        return ["AAPL"]
+
+
+def get_indexed_summary() -> List[dict]:
+    """Return a rich summary list of all indexed tickers, documents, and chunk counts."""
+    try:
+        store = get_vector_store()
+        data = store.get()
+        summary = {}
+        metas = data.get("metadatas", []) or []
+        for meta in metas:
+            if not meta:
+                continue
+            t = meta.get("ticker")
+            if not t:
+                src_lower = meta.get("source", "").lower()
+                t = "AAPL" if "apple" in src_lower or "aapl" in src_lower else "OTHER"
+            t = t.upper().strip()
+
+            src = meta.get("source", "Document")
+            if t not in summary:
+                summary[t] = {
+                    "ticker": t,
+                    "documents": {},
+                    "total_chunks": 0
+                }
+            summary[t]["documents"][src] = summary[t]["documents"].get(src, 0) + 1
+            summary[t]["total_chunks"] += 1
+
+        return sorted(list(summary.values()), key=lambda x: x["ticker"])
+    except Exception as e:
+        print("error getting summary:", e)
+        return []
+
+
+def is_ticker_indexed(ticker: str) -> bool:
+    """Check if a specific ticker exists in the vector store."""
+    if not ticker:
+        return False
+    indexed = get_indexed_tickers()
+    return ticker.upper().strip() in indexed
+
+
+def clear_vector_store() -> bool:
+    """Clear all indexed documents from ChromaDB."""
+    try:
+        from app.core import config
+        import chromadb
+        client = chromadb.PersistentClient(path=config.CHROMA_DIR)
+        try:
+            client.delete_collection("financial_filings")
+        except Exception:
+            pass
+        return True
+    except Exception as e:
+        print("clear failed:", e)
+        return False
+
