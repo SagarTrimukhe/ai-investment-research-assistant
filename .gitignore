@@ -51,6 +51,13 @@ htmlcov/
 *.log
 logs/
 
+# AI-generated meta files
+PROMPT_HISTORY.md
+AGENTS.md
+GEMINI.md
+
 # Study guides & stage breakdown PDFs (local only, never committed)
 study_guides/
 scripts/generate_study_pdfs.py
+
+
