@@ -33,10 +33,12 @@ def comparative_analysis_node(state: AgentState) -> dict:
     ticker = state.get("ticker", "AAPL").upper()
     benchmark = state.get("benchmark")
 
+    # default benchmark if not set or if user set benchmark to same ticker
     if not benchmark or benchmark.upper() == ticker:
         benchmark = "MSFT" if ticker != "MSFT" else "GOOGL"
     benchmark = benchmark.upper()
 
+    # available tools for agent invocation
     tools = [get_stock_valuation_metrics, get_stock_overview]
     tool_map = {t.name: t for t in tools}
     tool_calls_executed: List[Dict[str, Any]] = []
@@ -46,6 +48,7 @@ def comparative_analysis_node(state: AgentState) -> dict:
 
     llm = get_llm(temperature=0.2)
 
+    # Step 1: Query valuation metrics for target and peer
     try:
         llm_with_tools = llm.bind_tools(tools)
         tool_prompt = (
@@ -60,7 +63,12 @@ def comparative_analysis_node(state: AgentState) -> dict:
                 args = call.get("args", {})
                 if fn_name in tool_map:
                     result = tool_map[fn_name].invoke(args)
-                    tool_calls_executed.append({"name": fn_name, "args": args, "result": result})
+                    tool_calls_executed.append({
+                        "name": fn_name,
+                        "args": args,
+                        "result": result,
+                    })
+                    # assign to target or benchmark if valuation metrics
                     called_ticker = str(args.get("ticker", "")).upper()
                     if fn_name == "get_stock_valuation_metrics":
                         if called_ticker == ticker:
@@ -70,18 +78,20 @@ def comparative_analysis_node(state: AgentState) -> dict:
     except Exception as tool_err:
         pass
 
-    # BUG: calls fetch_valuation_metric (singular) - NameError at runtime
+    # Fallback to direct fetch if tool calling did not populate both metrics
     if not target_metrics:
         target_metrics = fetch_valuation_metrics(ticker)
     if not bench_metrics:
         bench_metrics = fetch_valuation_metrics(benchmark)
 
+    # grab fundamental and sentiment context from upstream agents
     fundamentals = state.get("fundamentals", {})
     fund_summary = fundamentals.get("summary", "No filing fundamentals available.")
     sentiment = state.get("sentiment", {})
     sent_label = sentiment.get("label", "Neutral")
     sent_summary = sentiment.get("summary", "")
 
+    # Step 2: Compare metrics and generate comparison
     structured_llm = llm.with_structured_output(ComparativeAnalysisOutput)
 
     prompt = f"""Compare the valuation metrics and market position of {ticker} against {benchmark}.
@@ -140,3 +150,4 @@ Compare {ticker} vs. {benchmark}. Assess whether {ticker} is trading at a premiu
             "verdict": f"Comparative evaluation between {ticker} and {benchmark} based on current market multiples.",
             "tools_used": [t["name"] for t in tool_calls_executed] if tool_calls_executed else ["get_stock_valuation_metrics"],
         }}
+

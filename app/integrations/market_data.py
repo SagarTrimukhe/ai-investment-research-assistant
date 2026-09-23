@@ -108,3 +108,4 @@ def fetch_valuation_metrics(ticker: str) -> dict:
             "fifty_two_week_low": "N/A",
             "currency": "USD",
         }
+

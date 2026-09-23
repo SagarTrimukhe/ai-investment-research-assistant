@@ -1,21 +1,23 @@
-from typing import List
+from typing import List, Literal
+import json
 from pydantic import BaseModel, Field
 from app.core.state import AgentState
 from app.core.llm import get_llm
 
 
 class TrendAnalysisOutput(BaseModel):
-    sentiment_label: str = Field(description="Overall sentiment: Bullish, Bearish, or Neutral")
-    sentiment_score: float = Field(description="Sentiment confidence between -1.0 and 1.0")
-    sector_tailwinds: List[str] = Field(description="Positive sector catalysts and growth drivers")
-    macro_risks: List[str] = Field(description="Macroeconomic headwinds and risks")
-    summary: str = Field(description="Brief 1-2 sentence sentiment summary")
+    sentiment_label: Literal["Bullish", "Neutral", "Bearish"] = Field(description="Bullish, Neutral, or Bearish")
+    sentiment_score: float = Field(description="Score from -1.0 to 1.0")
+    sector_tailwinds: List[str] = Field(description="Key sector catalysts and growth drivers")
+    macro_risks: List[str] = Field(description="Macro or regulatory headwinds")
+    summary: str = Field(description="Brief 1-2 sentence market trend summary")
 
 
 def trend_analysis_node(state: AgentState) -> dict:
-    """Analyzes market trends and sentiment for the target ticker."""
+    """Looks at market sentiment and sector trends for the given ticker."""
     ticker = state.get("ticker", "AAPL")
 
+    # grab fundamental summary from previous agent if available
     # (in parallel mode, fundamentals may not be populated yet — that's fine)
     fundamentals = state.get("fundamentals", {})
     context = fundamentals.get("summary", "") if fundamentals else ""

@@ -17,3 +17,4 @@ def get_vector_store(collection_name="financial_filings"):
         embedding_function=get_embedding_model(),
         persist_directory=config.CHROMA_DIR
     )
+

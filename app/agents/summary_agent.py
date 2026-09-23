@@ -24,6 +24,7 @@ def summary_agent_node(state: AgentState) -> dict:
     ticker = state.get("ticker", "AAPL").upper()
     benchmark = state.get("benchmark", "MSFT").upper()
 
+    # context from upstream agents
     fundamentals = state.get("fundamentals", {})
     sentiment = state.get("sentiment", {})
     comparison = state.get("comparison", {})
@@ -36,6 +37,7 @@ def summary_agent_node(state: AgentState) -> dict:
     comp_verdict = comparison.get("verdict", "No comparative verdict available.")
     rel_valuation = comparison.get("relative_valuation_summary", "")
 
+    # available tools for agent invocation
     tools = [get_stock_price_volatility, search_sec_filings]
     tool_map = {t.name: t for t in tools}
     tools_called: List[str] = []
@@ -43,6 +45,7 @@ def summary_agent_node(state: AgentState) -> dict:
 
     llm = get_llm(temperature=0.2)
 
+    # try to get volatility data using tool calling first
     try:
         llm_with_tools = llm.bind_tools(tools)
         tool_prompt = (
@@ -60,8 +63,9 @@ def summary_agent_node(state: AgentState) -> dict:
                     if fn_name == "get_stock_price_volatility":
                         volatility_data = res
     except Exception:
-        pass
+        pass  # tool calling didnt work, we'll fetch directly below
 
+    # Fallback to direct calculation if tool calling did not populate volatility
     if not volatility_data or "error" in volatility_data:
         volatility_data = get_stock_price_volatility.invoke({"ticker": ticker, "period": "6mo"})
         if not tools_called:
@@ -71,6 +75,7 @@ def summary_agent_node(state: AgentState) -> dict:
     max_dd = volatility_data.get("max_drawdown_pct", "N/A")
     latest_price = volatility_data.get("latest_close") or 150.0
 
+    # Step 2: Synthesize findings into structured investment memo
     structured_llm = llm.with_structured_output(InvestmentMemoOutput)
 
     prompt = f"""Analyze the financial research data for {ticker} (current price: ${latest_price}) compared to benchmark {benchmark}.
@@ -122,6 +127,7 @@ Based on these findings, provide an investment summary including:
             "risks": data.key_risks,
         }
     except Exception as e:
+        # Fallback if structured generation encounters an issue
         print("summary agent failed, using fallback:", e)
         fallback_risks = existing_risks or [f"Competition from {benchmark}.", "Market volatility and macroeconomic factors."]
         thesis = {
