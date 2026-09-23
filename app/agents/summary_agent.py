@@ -69,7 +69,7 @@ def summary_agent_node(state: AgentState) -> dict:
 
     ann_vol = volatility_data.get("annualized_volatility_pct", "N/A")
     max_dd = volatility_data.get("max_drawdown_pct", "N/A")
-    latest_price = volatility_data.get("latest_close", 150.0)
+    latest_price = volatility_data.get("latest_close") or 150.0
 
     structured_llm = llm.with_structured_output(InvestmentMemoOutput)
 
@@ -96,10 +96,17 @@ Based on these findings, provide an investment summary including:
 
     try:
         data: InvestmentMemoOutput = structured_llm.invoke(prompt)
+        
+        # handle case where target price might have string symbols or formatting
+        try:
+            target_price_val = float(str(data.target_price).replace("$", "").replace(",", "").strip())
+        except (ValueError, TypeError):
+            target_price_val = float(latest_price)
+
         thesis = {
             "executive_summary": data.executive_summary,
             "rating": data.rating.upper(),
-            "target_price": data.target_price,
+            "target_price": target_price_val,
             "upside_potential_pct": data.upside_potential_pct,
             "current_price": latest_price,
             "thesis_points": data.thesis_points,
@@ -110,11 +117,12 @@ Based on these findings, provide an investment summary including:
         }
         return {
             "rating": data.rating.upper(),
-            "target_price": float(data.target_price),
+            "target_price": target_price_val,
             "draft_thesis": thesis,
             "risks": data.key_risks,
         }
     except Exception as e:
+        print("summary agent failed, using fallback:", e)
         fallback_risks = existing_risks or [f"Competition from {benchmark}.", "Market volatility and macroeconomic factors."]
         thesis = {
             "executive_summary": f"Research synthesis for {ticker} based on available metrics and comparison with {benchmark}.",
