@@ -116,6 +116,7 @@ with tab_ingest:
                         filename=up_file.name,
                         ticker=file_ticker,
                         progress_callback=on_progress,
+                    )
                     total_chunks += chunks
 
                     # Archive copy to AWS S3 if configured
