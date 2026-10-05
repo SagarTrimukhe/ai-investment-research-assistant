@@ -8,6 +8,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import streamlit as st
 from app.services.workflow_service import WorkflowService
 from app.integrations.market_data import fetch_stock_overview, fetch_price_history
+from app.integrations.s3_client import S3Service
+from app.services.export_service import ExportService
 from app.services.document_ingestion import (
     extract_text,
     ingest_document_text,
@@ -31,6 +33,8 @@ st.sidebar.caption("Course Project • Multi-Agent Financial Research")
 st.sidebar.subheader("System Info")
 st.sidebar.text("LLM: Gemini 1.5 Flash")
 st.sidebar.text("Database: ChromaDB")
+s3_status = S3Service().is_configured()
+st.sidebar.text(f"Storage: {'AWS S3 (Active)' if s3_status else 'Local + S3 Ready'}")
 
 indexed_list = get_indexed_tickers()
 st.sidebar.subheader(f"Indexed Companies ({len(indexed_list)})")
@@ -112,8 +116,13 @@ with tab_ingest:
                         filename=up_file.name,
                         ticker=file_ticker,
                         progress_callback=on_progress,
-                    )
                     total_chunks += chunks
+
+                    # Archive copy to AWS S3 if configured
+                    s3 = S3Service()
+                    if s3.is_configured():
+                        up_file.seek(0)
+                        s3.upload_bytes(up_file.read(), f"filings/{file_ticker}/{up_file.name}")
 
                 progress_bar.progress(1.0, text="Indexing complete.")
                 status_text.empty()
@@ -493,3 +502,26 @@ with tab_review:
                 st.session_state["awaiting_approval"] = False
                 st.toast("Decision recorded successfully.")
                 st.rerun()
+
+        # Report Export & S3 Cloud Storage Sync
+        st.divider()
+        st.subheader("Report Export & Cloud Storage (AWS S3)")
+        exp_col1, exp_col2 = st.columns(2)
+        with exp_col1:
+            exporter = ExportService()
+            report_md = exporter.to_markdown(latest, f"data/processed/{ticker}_investment_memo.md")
+            st.download_button(
+                "📥 Download Certified Memorandum (.md)",
+                data=report_md,
+                file_name=f"{ticker}_investment_memo.md",
+                mime="text/markdown",
+                use_container_width=True,
+            )
+        with exp_col2:
+            if st.button("☁️ Archive Memorandum to AWS S3", use_container_width=True):
+                exporter = ExportService()
+                s3_uri = exporter.export_to_s3(latest)
+                if s3_uri:
+                    st.success(f"Report archived to `{s3_uri}`")
+                else:
+                    st.info("AWS S3 credentials not provided in `.env`. Saved to `data/processed/` locally.")
