@@ -60,4 +60,8 @@ GEMINI.md
 study_guides/
 scripts/generate_study_pdfs.py
 
-
+# Presentations & defense guides (local only, never committed)
+presentation.html
+*.html
+reports/
+*250*.py
