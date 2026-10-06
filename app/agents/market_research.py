@@ -18,6 +18,9 @@ class MarketResearchOutput(BaseModel):
     risks: List[str] = Field(description="List of key business risks")
 
 
+from app.integrations.market_data import fetch_fundamental_metrics
+
+
 def market_research_node(state: AgentState) -> dict:
     """Pulls SEC filing chunks from chroma and extracts financial data."""
     ticker = state.get("ticker", "AAPL")
@@ -39,6 +42,16 @@ def market_research_node(state: AgentState) -> dict:
             docs = [d for d in all_docs if d.metadata.get("ticker") == ticker]
 
     if not docs:
+        # Fallback to verified live market registry if no filing is uploaded
+        fb = fetch_fundamental_metrics(ticker)
+        if fb.get("metrics") and fb["metrics"].get("total_revenue") != "N/A":
+            return {
+                "fundamentals": {
+                    "metrics": fb["metrics"],
+                    "summary": fb["summary"],
+                },
+                "risks": fb["risks"],
+            }
         return {
             "fundamentals": {
                 "metrics": {},
