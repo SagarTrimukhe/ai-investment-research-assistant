@@ -26,6 +26,8 @@ data/processed/*
 !data/processed/.gitkeep
 data/chroma_db/*
 !data/chroma_db/.gitkeep
+data/nasdaq_reports/
+data/test_reports/
 
 # IDE / OS
 .DS_Store

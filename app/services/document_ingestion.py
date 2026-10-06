@@ -109,7 +109,16 @@ def ingest_document_text(
 
 
 def detect_ticker_from_filename(filename: str) -> Optional[str]:
-    """Infer the stock ticker symbol from common filename patterns."""
+    """Infer the stock ticker symbol from common filename patterns supporting 260+ stocks."""
+    try:
+        from app.services.nasdaq_universe import detect_nasdaq_ticker
+        detected = detect_nasdaq_ticker(filename)
+        if detected:
+            return detected
+    except Exception:
+        pass
+
+    # Quick fallback mapping
     fn = filename.upper()
     mapping = {
         "NVIDIA": "NVDA", "NVDA": "NVDA",
