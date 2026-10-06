@@ -19,6 +19,11 @@ from app.services.document_ingestion import (
     detect_ticker_from_filename,
     clear_vector_store,
 )
+from app.services.nasdaq_universe import (
+    get_nasdaq_universe,
+    get_nasdaq_tickers,
+    get_nasdaq_company_name,
+)
 
 st.set_page_config(
     page_title="AI Investment Research Assistant",
@@ -138,6 +143,50 @@ with tab_ingest:
                 status_text.empty()
                 st.error(f"Error during document ingestion: {exc}")
 
+    # Pre-Loaded Offline NASDAQ Reports (200+ Stocks)
+    reports_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "nasdaq_reports"))
+    if os.path.exists(reports_dir):
+        available_files = [f for f in os.listdir(reports_dir) if f.endswith("_10K_filing.txt")]
+        if available_files:
+            with st.expander(f"📁 Pre-Loaded Offline NASDAQ Reports ({len(available_files)} Stocks Available)", expanded=False):
+                st.caption(
+                    "Standardized Form 10-K filing reports pulled from official SEC EDGAR records. "
+                    "Kept locally for rapid offline multi-agent testing without needing manual uploads."
+                )
+                avail_tickers = sorted([f.replace("_10K_filing.txt", "") for f in available_files])
+                col_n1, col_n2 = st.columns([3, 1])
+                with col_n1:
+                    chosen_report_ticker = st.selectbox(
+                        "Select Stock to Test",
+                        options=avail_tickers,
+                        format_func=lambda t: f"{t} — {get_nasdaq_company_name(t)}",
+                        key="sel_offline_nasdaq_stock",
+                    )
+                with col_n2:
+                    st.write("")
+                    st.write("")
+                    if st.button(f"Ingest {chosen_report_ticker} 10-K", type="primary", key="btn_ingest_offline_report"):
+                        report_path = os.path.join(reports_dir, f"{chosen_report_ticker}_10K_filing.txt")
+                        try:
+                            with open(report_path, "r", encoding="utf-8") as rf:
+                                report_content = rf.read()
+                            with st.spinner(f"Ingesting 10-K for {chosen_report_ticker}..."):
+                                chs = ingest_document_text(
+                                    text=report_content,
+                                    filename=f"{chosen_report_ticker}_10K_filing.txt",
+                                    ticker=chosen_report_ticker,
+                                )
+                                s3 = S3Service()
+                                if s3.is_available():
+                                    s3.upload_bytes(
+                                        report_content.encode("utf-8"),
+                                        f"filings/{chosen_report_ticker}/{chosen_report_ticker}_10K_filing.txt",
+                                    )
+                                st.success(f"Indexed {chs} chunks for {chosen_report_ticker}!")
+                                st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to ingest report: {e}")
+
     st.divider()
 
     # Knowledge Base Status
@@ -190,6 +239,11 @@ with tab_analysis:
     indexed_tickers = get_indexed_tickers()
     if indexed_tickers:
         st.caption("Indexed Filings Available: " + " • ".join(f"`{t}`" for t in indexed_tickers))
+
+    with st.expander("🔎 Browse 200+ Supported NASDAQ Stocks"):
+        st.caption("Extensive coverage across Tech, Semiconductors, Cloud/SaaS, Biotech, and Consumer:")
+        all_nasdaq = get_nasdaq_tickers()
+        st.write(" • ".join(f"`{t}`" for t in all_nasdaq[:50]) + f" ... and {len(all_nasdaq) - 50} more.")
 
     # Knowledge base status check
     is_indexed = is_ticker_indexed(ticker)
