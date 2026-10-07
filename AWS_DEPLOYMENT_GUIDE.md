@@ -180,7 +180,7 @@ Open your browser and navigate to:
 
 ## 6. Part 5: Required Capstone Evidence & Screenshots
 
-To fulfill **Sections 10, 11, and 12 of the Capstone RFP**, capture the following 4 screenshots for your Final Report and Presentation:
+Capture the following 4 screenshots for your Final Report and Presentation:
 
 1. **AWS EC2 Management Console**: Showing your running EC2 instance (`t3.medium`), Public IPv4 address, and `2/2 checks passed` status.
 2. **AWS S3 Console**: Showing your S3 bucket (`ai-investment-research-repo`) with the `/filings/` and `/reports/` folders containing uploaded files.

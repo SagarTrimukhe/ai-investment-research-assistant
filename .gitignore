@@ -1,4 +1,4 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,7 +16,7 @@ venv/
 .venv/
 ENV/
 
-# Environment variables
+# Environment variables & secrets
 .env
 
 # Data and vector store
@@ -29,7 +29,7 @@ data/chroma_db/*
 data/nasdaq_reports/
 data/test_reports/
 
-# IDE / OS
+# Operating System & IDEs
 .DS_Store
 Thumbs.db
 .idea/
@@ -38,32 +38,16 @@ Thumbs.db
 *.swo
 *~
 
-# Jupyter
+# Jupyter Notebooks
 .ipynb_checkpoints/
 
-# Testing
+# Testing & coverage
 .pytest_cache/
 .coverage
 htmlcov/
-
-# mypy / type checking
 .mypy_cache/
 
-# Logs
+# Logs & build artifacts
 *.log
 logs/
-
-# AI-generated meta files
-PROMPT_HISTORY.md
-AGENTS.md
-GEMINI.md
-
-# Study guides & stage breakdown PDFs (local only, never committed)
-study_guides/
-scripts/generate_study_pdfs.py
-
-# Presentations & defense guides (local only, never committed)
-presentation.html
-*.html
 reports/
-*250*.py
