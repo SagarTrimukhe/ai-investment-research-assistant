@@ -237,3 +237,118 @@ Unlike a high-level summary, this report documents the **authentic student engin
 
 ---
 
+## Week 4 Progress: AWS Cloud Deployment (EC2 + S3), Real SEC Filings & Final Submission
+**Timeline:** 02 October 2026 – 09 October 2026  
+**Status:** Completed  
+
+### 1. Objectives & Scope
+* Deploy the application onto AWS Cloud infrastructure (Amazon EC2 compute + Amazon S3 storage).
+* Expand stock universe with an offline 270-company NASDAQ catalog and genuine SEC EDGAR Form 10-K filings.
+* Harden production resilience against Gemini API free-tier rate limits (100 RPM quota).
+* Compile comprehensive technical deployment documentation, verification guides, and team contribution logs.
+* Complete the Capstone Project Final Report ([`FINAL_PROJECT_REPORT.md`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/FINAL_PROJECT_REPORT.md)) and defense presentation deck ([`presentation.html`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/presentation.html)).
+
+### 2. Activities & Key Deliverables
+* **AWS Cloud Infrastructure & Automation (04–06 Oct) — *Ganesh Swami & Nikhil Gaikwad*:**
+  * Developed automated EC2 bootstrap script [`scripts/setup_ec2.sh`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/setup_ec2.sh) that provisions Docker, Docker Compose, Git, a 2 GB Linux swapfile, and systemd service management.
+  * Configured AWS S3 client with automatic memorandum archiving and bucket health checks.
+  * Authored [`AWS_DEPLOYMENT_GUIDE.md`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/AWS_DEPLOYMENT_GUIDE.md) providing step-by-step instructions for EC2 instance launch, security group configuration (ports 8501, 22), S3 bucket policy setup, and containerized deployment.
+* **SEC EDGAR Pipeline & Universe Expansion (06–07 Oct) — *Nilanjan Das & Sagar Trimukhe*:**
+  * Developed [`app/services/nasdaq_universe.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/services/nasdaq_universe.py) cataloging **270 US equities** across 6 industries (Technology, Healthcare, Financials, Consumer Discretionary, Communication Services, Industrials) with verified SEC CIKs.
+  * Developed [`scripts/fetch_real_10k_filings.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/fetch_real_10k_filings.py) to programmatically fetch official SEC Form 10-K annual filings directly from the SEC EDGAR API.
+  * Downloaded, verified, and cataloged 20 genuine official SEC Form 10-K filings (Apple, Microsoft, NVIDIA, Amazon, Alphabet, Meta, Tesla, etc.) with confirmed accession numbers.
+  * Ingested and verified Apple's official FY2023 10-K filing (209 chunks, 219,376 characters) into ChromaDB with verified retrieval precision.
+* **Final Presentation & Capstone Documentation (07–08 Oct) — *All Members*:**
+  * Authored interactive 72-slide HTML presentation deck ([`presentation.html`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/presentation.html)) complete with speaker notes, architectural diagrams, and quantitative formulas.
+  * Compiled comprehensive 18-section capstone report ([`FINAL_PROJECT_REPORT.md`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/FINAL_PROJECT_REPORT.md)).
+  * Verified end-to-end repository hygiene, removing temporary artifacts and validating clean git status.
+
+### 3. Roadblocks & Technical Challenges (Sprint 4)
+
+#### 🔴 Roadblock 4.1: Gemini API Free-Tier Quota Exhaustion (HTTP 429) on 10-K Ingestion
+* **How We Hit the Issue:**  
+  When testing real SEC Form 10-K filings, Nilanjan ingested Apple's official 209-chunk filing. Approximately 15 seconds into the embedding process, the terminal exploded with Google API exceptions:
+  `google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota). Please retry after 58s`.
+  The ingestion pipeline crashed, leaving the ChromaDB vector database in a corrupted, half-indexed state.
+* **Debugging & Investigation:**  
+  We discovered that Google Gemini's free-tier API enforces a strict rate limit of **100 requests per minute (RPM)**. Emitting 209 embedding requests concurrently or in an unthrottled loop instantly saturated the quota window within the first 80 chunks.
+* **Engineering Resolution:**  
+  Nikhil engineered a robust **micro-batching and exponential backoff engine** in [`app/services/document_ingestion.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/services/document_ingestion.py):
+  * Chunks are grouped into micro-batches of 20 with an intentional 1.0-second delay between batches.
+  * If an HTTP 429 error occurs, a regex parser inspects the error message for the server's suggested wait time (e.g., `"retry after 58s"`), adds jitter, and enters a graceful sleep before retrying up to 5 times.
+* **Student Takeaway & Learning:**  
+  *We experienced the reality of cloud API rate limits in production. Resilient AI systems must be designed with batching, throttling, and header-aware retry logic rather than assuming infinite API availability.*
+
+#### 🔴 Roadblock 4.2: SEC EDGAR Fair Access 403 Blocking & Gzip Stream Decoding
+* **How We Hit the Issue:**  
+  When Nilanjan wrote a Python script using `requests.get()` to download 10-K filings directly from the SEC EDGAR archive (`www.sec.gov/Archives/edgar/data/...`), the SEC server immediately rejected all requests with `HTTP 403 Forbidden`. When we manually spoofed a browser header, the response returned raw binary garbage that broke standard text decoders.
+* **Debugging & Investigation:**  
+  Reading the SEC EDGAR Fair Access Policy revealed that the SEC strictly requires automated requests to declare a custom User-Agent in the exact format: `Sample Company Name AdminContact@<sample company domain>.com`. Furthermore, the SEC automatically compresses large historical filings in Gzip format to conserve bandwidth, returning binary streams rather than raw text.
+* **Engineering Resolution:**  
+  In [`scripts/fetch_real_10k_filings.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/fetch_real_10k_filings.py), Nilanjan configured compliant headers declaring our institutional research contact:
+  `User-Agent: IITRoorkeeFuturenseFinanceResearch student@iitr.ac.in`
+  He also added magic-byte detection (`content[:2] == b'\x1f\x8b'`) to automatically pass binary streams through `gzip.decompress()` and rate-limited requests to under 5 per second to comply with SEC fair-access limits.
+* **Student Takeaway & Learning:**  
+  *We learned how to interface with regulated government data APIs. Adhering to API compliance policies and handling binary compression formats are fundamental data engineering competencies.*
+
+#### 🔴 Roadblock 4.3: Memory Starvation (OOM Killer) on AWS EC2 `t2.micro`
+* **How We Hit the Issue:**  
+  When deploying the application inside Docker on a standard AWS EC2 `t2.micro` / `t3.micro` instance (which has only 1 GB of physical RAM), running Streamlit, ChromaDB, and Python embedding libraries simultaneously caused the Linux Out-Of-Memory (OOM) killer to abruptly terminate the container with `Killed` in the console.
+* **Debugging & Investigation:**  
+  Running `dmesg -T` on the EC2 instance confirmed: `Out of memory: Killed process (python) total-vm:1480MB, anon-rss:780MB`. A 1 GB RAM instance lacks sufficient headroom to run modern AI Python runtimes and in-memory vector stores concurrently without memory swapping.
+* **Engineering Resolution:**  
+  Ganesh updated the automated EC2 bootstrap script [`scripts/setup_ec2.sh`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/setup_ec2.sh) to configure a **2 GB Linux swapfile**:
+  ```bash
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  ```
+  This effectively expanded total virtual memory to 3 GB, allowing the containerized application to run stably on cost-effective free-tier compute.
+* **Student Takeaway & Learning:**  
+  *We gained practical AIOps and cloud deployment experience. Memory management and virtual swapfile configuration are indispensable when deploying resource-intensive AI applications on cost-constrained cloud compute.*
+
+#### 🔴 Roadblock 4.4: Foreign Private Issuer SEC Form Discrepancies (Form 20-F)
+* **How We Hit the Issue:**  
+  When testing our expanded 270-stock universe with prominent international NASDAQ equities like ASML Holding (`ASML`) and Arm Holdings (`ARM`), our automated SEC filing script returned `Zero filings found for ticker ASML`.
+* **Debugging & Investigation:**  
+  We investigated SEC EDGAR filing histories and discovered that foreign companies listed on US exchanges file **Form 20-F** (Annual Report for Foreign Private Issuers) rather than the standard domestic **Form 10-K**. Filtering exclusively for `"10-K"` caused foreign market leaders to be omitted entirely.
+* **Engineering Resolution:**  
+  Nilanjan implemented an intelligent multi-tier form resolution hierarchy in [`scripts/fetch_real_10k_filings.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/fetch_real_10k_filings.py):
+  1. Primary query: Form 10-K (Domestic Annual Report)
+  2. Secondary query: Form 10-K/A (Amended Annual Report)
+  3. Tertiary fallback: Form 20-F (Foreign Private Issuer Annual Report)
+* **Student Takeaway & Learning:**  
+  *We learned that real-world financial data contains structural edge cases. Building resilient data ingestion pipelines requires understanding the regulatory nuances of domestic vs. international entities.*
+
+---
+
+## Master Technical Roadblocks & Engineering Resolutions (12 Key Challenges)
+
+| # | Challenge Domain | Technical Problem Description | Root Cause Identified | Engineering Resolution Applied | Key Learning / Takeaway | Primary Lead |
+|:---:|:---|:---|:---|:---|:---|:---|
+| **1** | **LangGraph Concurrency** | Parallel fan-out crashed with `InvalidUpdateError` when child nodes completed simultaneously. | Default LangGraph state channel replaces values; concurrent updates created write collision. | Implemented custom `_keep_latest` reducer wrapped in `Annotated[T, _keep_latest]` in `AgentState`. | Multi-agent concurrency requires explicit state reduction logic. | Ganesh Swami |
+| **2** | **Gemini Rate Limits** | Ingesting 209-chunk 10-K filing triggered Google API HTTP 429 quota exhaustion in 15 seconds. | Unthrottled embedding loops exceeded free-tier 100 requests per minute ceiling. | Built micro-batching (20 chunks/batch) with 1.0s delay and regex-driven exponential backoff. | Production AI pipelines must implement rate-limit resilience and retry jitter. | Nikhil Gaikwad |
+| **3** | **RAG Table Integrity** | Small chunk sizes (400 chars) split balance sheets, separating numbers from accounting labels. | Character splitting ignored financial table grammar, destroying row-column associations. | Standardized on 1,500 chars with 10% (150 chars) overlap, prioritizing double-newline (`\n\n`) separators. | Financial documents require structure-aware chunking over naive character counts. | Nilanjan Das |
+| **4** | **Cross-Ticker Contamination** | Ingesting multiple company reports resulted in competitor chunks appearing in search results. | Semantic vector embeddings measure topical similarity without entity boundary isolation. | Injected strict `ticker` metadata into chunks and enforced mandatory `filter={"ticker": target}` queries. | Hybrid retrieval with hard metadata pre-filtering is essential for multi-entity RAG. | Nilanjan Das |
+| **5** | **LLM Float Formatting** | Summary Agent generated string prices like `"$245.50"`, crashing downstream risk calculations. | LLMs naturally format financial numbers with currency symbols and commas. | Enforced Pydantic schema validation and built defensive regex cleaner `_clean_target_price()`. | Never trust raw LLM output types; always implement deterministic sanitization. | Shradha Gaikwad |
+| **6** | **Timezone Serialization** | Streamlit line charts crashed with PyArrow timestamp serialization exceptions. | `yfinance` returned timezone-aware DatetimeIndex which PyArrow rejects. | Applied `.tz_localize(None)` in market data fetcher to strip UTC offsets while preserving dates. | Third-party API types must be sanitized at the boundary before feeding UI engines. | Nikhil Gaikwad |
+| **7** | **SEC EDGAR Access & Gzip** | Automated filing requests received HTTP 403 Forbidden; responses returned binary garbage. | SEC Fair Access policy requires custom User-Agent; responses are compressed in Gzip streams. | Declared compliant research User-Agent, throttled to <5 req/sec, and added `gzip.decompress()`. | Regulated APIs require strict compliance with fair-access protocols and binary formats. | Nilanjan Das |
+| **8** | **Tool Calling Timeouts** | LLM function calling for peer valuation multiples occasionally timed out or hallucinated. | Network latency spikes and non-deterministic tool parameter generation. | Engineered dual-strategy architecture: attempts tool calling with instant deterministic API fallback. | Always build deterministic code fallbacks behind probabilistic LLM tool calls. | Nikhil Gaikwad |
+| **9** | **HITL State Loss** | Streamlit reactive script reruns wiped in-memory graph execution context during human approval. | Streamlit reruns scripts from line 1 on button clicks, breaking stateless memory loops. | Bound LangGraph `MemorySaver` to persistent `st.session_state` thread ID using `Command(resume=...)`. | Reconciling reactive UIs with stateful workflows requires persistent session anchoring. | Sagar Trimukhe |
+| **10** | **AWS Offline Resilience** | Missing AWS credentials crashed document indexing and export operations in local testing. | Unhandled `boto3` client exceptions when local environment variables were unset. | Built graceful degradation in `s3_client.py` with `is_available()` health checks and local fallbacks. | Enterprise cloud integrations must gracefully degrade to local mode when offline. | Ganesh Swami |
+| **11** | **Financial Volatility Skew** | Simple standard deviation over 365 calendar days underestimated stock volatility by ~25%. | Weekends and holidays have zero trading activity, artificially diluting variance. | Scaled daily logarithmic returns over active market sessions using standard $\sqrt{252}$ trading days. | Financial algorithms must strictly follow quantitative domain conventions. | Shradha Gaikwad |
+| **12** | **Foreign Issuer Filings** | Automated filing downloader returned zero results for major equities like ASML and ARM. | Foreign private issuers file SEC Form 20-F rather than domestic Form 10-K. | Engineered intelligent multi-tier query hierarchy: Form 10-K -> Form 10-K/A -> Form 20-F. | Ingestion pipelines must account for international corporate regulatory variations. | Nilanjan Das |
+
+---
+
+## Detailed Individual Contribution Matrix (5 Members)
+
+| Team Member | Primary Domain | Core Technical & Cross-Functional Contributions | Deliverables in Codebase |
+|:---|:---|:---|:---|
+| **Ganesh Swami** | **Backend Architecture & DevOps Lead** | • Designed LangGraph Directed Acyclic Graph (DAG) state topology.<br>• Implemented parallel fan-out and fan-in synchronization with custom `_keep_latest` state reducers.<br>• Built Human-in-the-Loop (HITL) interrupt protocol (`langgraph.types.interrupt`) and resumption handling.<br>• Authored automated AWS EC2 provisioning script and AWS S3 integration client.<br>• Configured 2 GB Linux swapfile resolving EC2 OOM memory starvation.<br>• **Cross-support:** Collaborated with Sagar on Streamlit execution streaming and thread checkpointing. | [`app/services/workflow_service.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/services/workflow_service.py)<br>[`app/core/state.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/core/state.py)<br>[`app/agents/hitl_review.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/agents/hitl_review.py)<br>[`scripts/setup_ec2.sh`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/setup_ec2.sh)<br>[`app/integrations/s3_client.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/integrations/s3_client.py) |
+| **Shradha Gaikwad** | **Agent Intelligence & Financial Modeling Lead** | • Developed Market Research Agent for fundamental accounting and 10-K balance sheet extraction.<br>• Built Trend & Sentiment Analysis Agent with macroeconomic catalyst scoring (-1.0 to +1.0).<br>• Implemented Summary Agent investment thesis synthesis (BUY/HOLD/SELL rating & 12-month target price).<br>• Engineered stock risk calculations: 1-year annualized price volatility (based on 252 trading days) and historical maximum price drop (drawdown).<br>• Designed strongly typed Pydantic output validation contracts and defensive regex float sanitizers. | [`app/agents/market_research.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/agents/market_research.py)<br>[`app/agents/trend_analysis.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/agents/trend_analysis.py)<br>[`app/agents/summary_agent.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/agents/summary_agent.py)<br>[`app/schemas/financial.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/schemas/financial.py)<br>[`app/schemas/report.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/schemas/report.py) |
+| **Sagar Trimukhe** | **Frontend UI & Chatbot/HITL Integration Lead** | • Built comprehensive 3-Tab Streamlit dashboard interface ([`app/main.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/main.py)).<br>• Developed Document Ingestion UI with drag-and-drop file upload and ChromaDB status metrics.<br>• Engineered real-time agent execution visualizer and live node progress streaming.<br>• Built Human-in-the-Loop Analyst Review workspace with thesis editor and certification form.<br>• Solved Streamlit reactive script rerun context loss by binding graph checkpointer to session thread ID.<br>• Integrated one-click Markdown memorandum export and AWS S3 cloud archiving buttons.<br>• **Cross-support:** Integrated Nilanjan's 270-stock catalog into the frontend quick-ingestion selector. | [`app/main.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/main.py)<br>[`app/services/export_service.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/services/export_service.py)<br>[`presentation.html`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/presentation.html) |
+| **Nilanjan Das** | **Data Engineering & Filing Ingestion Lead** | • Curated and implemented the 270-stock NASDAQ universe catalog across 6 major industries.<br>• Developed automated SEC EDGAR 10-K downloader with accession number tracking and HTML-to-text cleaning.<br>• Downloaded, verified, and cataloged 20 genuine official SEC Form 10-K filings.<br>• Engineered recursive text splitting (1,500 chars / 150 overlap) preserving financial table integrity.<br>• Implemented persistent ChromaDB storage with ticker metadata isolation to eliminate cross-stock contamination.<br>• Resolved SEC EDGAR HTTP 403 blocking and transparent Gzip stream decoding. | [`app/services/nasdaq_universe.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/services/nasdaq_universe.py)<br>[`scripts/fetch_real_10k_filings.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/fetch_real_10k_filings.py)<br>[`app/services/document_ingestion.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/services/document_ingestion.py)<br>[`app/integrations/vector_store.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/integrations/vector_store.py) |
+| **Nikhil Gaikwad** | **Full-Stack Integration, Telemetry & QA Engineer** | • Integrated `yfinance` live market telemetry tools for real-time stock profiles, trailing/forward P/E, and EV/EBITDA.<br>• Implemented Comparative Valuation Agent with dual-strategy tool calling and deterministic direct-API fallback.<br>• Built Gemini Free-Tier rate-limit resilience engine with regex-driven exponential backoff (100 RPM recovery).<br>• Resolved Streamlit DatetimeIndex timezone rendering bugs via `.tz_localize(None)`.<br>• Developed RAG evaluation benchmark test scripts and led end-to-end integration testing. | [`app/agents/comparative_analysis.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/agents/comparative_analysis.py)<br>[`app/integrations/market_data.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/integrations/market_data.py)<br>[`app/tools/financial_tools.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/tools/financial_tools.py)<br>[`app/evaluation/rag_eval.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/app/evaluation/rag_eval.py)<br>[`scripts/test_aws_s3.py`](file:///Users/ganesh-test/Documents/ai-investment-research-assistant/scripts/test_aws_s3.py) |
