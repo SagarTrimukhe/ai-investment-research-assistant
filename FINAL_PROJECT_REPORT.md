@@ -10,8 +10,6 @@
 
 * **Program:** Enterprise AI Architecture & Autonomous Cloud Operations  
 * **Institution:** AlphaGen Research Systems  
-* **Cohort Duration:** 08 September 2026 – 16 October 2026  
-* **Submission Date:** 16 October 2026  
 * **Team Members:**
   1. **Ganesh Swami** — Backend Architecture, LangGraph DAG & Cloud DevOps Lead
   2. **Shradha Gaikwad** — Financial Agent Intelligence & Quantitative Modeling Lead
@@ -423,15 +421,15 @@ In high-stakes investment management, fully autonomous AI execution creates unac
 
 # 15. Sprint-Wise Progress Documentation
 
-Development was executed across structured weekly sprints (08 September – 16 October 2026). Comprehensive sprint-by-sprint engineering logs, debugging narratives, and technical takeaways are documented in `WEEKLY_PROGRESS_REPORT.md`:
+Development was executed across four structured weekly sprints. Comprehensive sprint-by-sprint engineering logs, debugging narratives, and technical takeaways are documented in `WEEKLY_PROGRESS_REPORT.md`:
 
-* **Week 1 (08 Sep – 15 Sep 2026):** Project Inception, Environment, Core Schemas & Baseline RAG Setup.
+* **Week 1:** Project Inception, Environment, Core Schemas & Baseline RAG Setup.
   * *Milestone:* Resolved state graph architecture over conversational chat loops; fixed table-splitting chunking issues; implemented ChromaDB metadata isolation.
-* **Week 2 (16 Sep – 23 Sep 2026):** LangGraph Multi-Agent Orchestration, S3 Storage & Streamlit UI.
+* **Week 2:** LangGraph Multi-Agent Orchestration, S3 Storage & Streamlit UI.
   * *Milestone:* Resolved parallel state collisions during fan-out using `_keep_latest` reducers; resolved PyArrow timezone crash; built 3-tab Streamlit dashboard.
-* **Week 3 (24 Sep – 01 Oct 2026):** Volatility Mathematical Modeling, Prompt Hardening & Mid-Review.
+* **Week 3:** Volatility Mathematical Modeling, Prompt Hardening & Mid-Review.
   * *Milestone:* Implemented 252-day annualized stock volatility and maximum drawdown; built tool-calling fallbacks; bound checkpointer to `st.session_state` thread ID.
-* **Week 4 (02 Oct – 16 Oct 2026):** AWS Cloud Deployment (EC2 + S3), Real SEC Filings & Final Submission.
+* **Week 4:** AWS Cloud Deployment (EC2 + S3), Real SEC Filings & Final Submission.
   * *Milestone:* Automated EC2 deployment with 2 GB Linux swapfile; expanded stock catalog to 270 NASDAQ equities; downloaded 20 genuine SEC 10-Ks; resolved Gemini 100 RPM quota exhaustion.
 
 ---
