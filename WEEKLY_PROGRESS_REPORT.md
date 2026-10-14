@@ -2,8 +2,8 @@
 ## Capstone Project: AI Investment Research Assistant (AI Investment Research Assistant - Finance Domain)
 **Program:** Enterprise AI Architecture & Autonomous Cloud Operations  
 **Institution:** AlphaGen Research Systems  
-**Cohort Duration:** 08 September 2026 – 09 October 2026  
-**Submission Deadline:** 09 October 2026  
+**Cohort Duration:** 08 September 2026 – 16 October 2026  
+**Submission Deadline:** 16 October 2026  
 
 ### Team Members
 1. **Ganesh Swami** — Backend & Multi-Agent Architecture Lead
@@ -26,7 +26,7 @@ Unlike a high-level summary, this report documents the **authentic student engin
 |  Week 1 (08 Sep - 15 Sep)  : Project Inception, Environment, Core Schemas & Baseline RAG Setup   |
 |  Week 2 (16 Sep - 23 Sep)  : LangGraph Multi-Agent Orchestration, S3 Storage & Streamlit UI      |
 |  Week 3 (24 Sep - 01 Oct)  : Volatility Mathematical Modeling, Prompt Hardening & Mid-Review     |
-|  Week 4 (02 Oct - 09 Oct)  : AWS Cloud Deployment (EC2 + S3), Real SEC Filings & Final Submission |
+|  Week 4 (02 Oct - 16 Oct)  : AWS Cloud Deployment (EC2 + S3), Real SEC Filings & Final Submission |
 +--------------------------------------------------------------------------------------------------+
 ```
 
@@ -238,7 +238,7 @@ Unlike a high-level summary, this report documents the **authentic student engin
 ---
 
 ## Week 4 Progress: AWS Cloud Deployment (EC2 + S3), Real SEC Filings & Final Submission
-**Timeline:** 02 October 2026 – 09 October 2026  
+**Timeline:** 02 October 2026 – 16 October 2026  
 **Status:** Completed  
 
 ### 1. Objectives & Scope
