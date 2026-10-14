@@ -81,7 +81,7 @@ Led by **Nilanjan Das** with architectural guidance from **Ganesh Swami**, we bu
 * Tracked via a verified manifest: `data/nasdaq_reports/REAL_FILINGS_MANIFEST.json`.
 
 ### 5.2 Standardized NASDAQ Universe Dataset
-* **270-Stock Catalog:** Implemented in `app/services/nasdaq_universe.py` covering Mega-Cap Tech, Semiconductors, Cloud/SaaS, Healthcare, E-Commerce, and Industrials.
+* **270-Stock Catalog:** Curated by **Nilanjan Das** and integrated into the frontend quick-ingestion selector by **Sagar Trimukhe** (`app/services/nasdaq_universe.py`), covering Mega-Cap Tech, Semiconductors, Cloud/SaaS, Healthcare, E-Commerce, and Industrials.
 * **XBRL Financial Dataset:** Standardized reports generated from official SEC EDGAR XBRL APIs (`data.sec.gov/api/xbrl/companyfacts/`) storing verified revenue, operating income, gross profit, and research & development expenses.
 * **Corporate Presentations & Fact-Sheets:** Included multi-page PDFs (e.g., `Meta Earnings-Presentation-Q2-2026.pdf`, `Infosys fact-sheet.pdf`, `NVIDIA_3_Quarter_Report_Calendar_2026.pdf`) to validate multi-format PDF ingestion.
 
@@ -147,7 +147,7 @@ Designed by Principal Architect **Ganesh Swami**, the system follows a layered, 
 ```
 
 ### Architectural Layering:
-1. **Presentation Layer:** Reactive Streamlit UI providing 3 specialized tabs for Ingestion, Live Execution Visualization, and Human Analyst Review.
+1. **Presentation Layer (Sagar Trimukhe):** Reactive Streamlit UI providing 3 specialized tabs for Ingestion, Live Execution Visualization, and Human Analyst Review, engineered with real-time streaming generators and persistent session caching.
 2. **Orchestration Layer:** Stateful LangGraph Directed Acyclic Graph (DAG) managing asynchronous node execution, state channel reduction, and execution checkpointing.
 3. **Specialized Intelligence Layer:** Domain-specific agents running fine-tuned Gemini Flash prompts with Pydantic validation contracts.
 4. **Data & Storage Layer:** Dual persistence combining local ChromaDB vector collections for microsecond semantic retrieval with AWS S3 for long-term document archiving.
@@ -346,7 +346,7 @@ The production infrastructure is deployed on **Amazon Web Services (AWS)**, arch
 
 # 11. Screenshots of Application/Dashboard/Workflow
 
-*(Capture and embed the 4 mandatory screenshots captured from your live AWS deployment as outlined in Section 6 of `AWS_DEPLOYMENT_GUIDE.md`)*
+*(Capture and embed the 4 mandatory screenshots from the live application dashboard engineered by **Sagar Trimukhe** and deployed on AWS EC2 by **Ganesh Swami**, as outlined in Section 6 of `AWS_DEPLOYMENT_GUIDE.md`)*
 
 1. **AWS EC2 Management Console Screenshot:** Demonstrating active `t3.medium` EC2 instance, public IPv4 address, and `2/2 checks passed` health status.
 2. **AWS S3 Management Console Screenshot:** Demonstrating the `ai-investment-research-repo` bucket with `/filings/` and `/reports/` directories containing uploaded assets.
@@ -389,8 +389,8 @@ Engineered collaboratively by **Ganesh Swami**, **Nikhil Gaikwad**, and **Shradh
    * If the LLM's function-calling tool invocation for `yfinance` encounters timeouts or formatting issues, `app/agents/comparative_analysis.py` catches the exception and immediately invokes a deterministic direct-API fallback.
 3. **Target Price Float Sanitization:**
    * LLMs frequently return float strings with currency symbols or commas (e.g., `"$245.50"`). The Summary Agent passes all outputs through `_clean_target_price()` regex cleaners to guarantee valid numeric casting.
-4. **Timezone Sanitization:**
-   * Normalized all `yfinance` DatetimeIndex objects using `.tz_localize(None)` to prevent Streamlit PyArrow visualization errors.
+4. **Timezone Sanitization & PyArrow Chart Rendering:**
+   * Normalized all `yfinance` DatetimeIndex objects using `.tz_localize(None)` in `app/integrations/market_data.py`, resolving Apache PyArrow serialization crashes identified during Streamlit UI chart rendering by **Sagar Trimukhe** and **Nikhil Gaikwad**.
 5. **SEC EDGAR Compliance & Gzip Handling:**
    * Added declared institutional research User-Agent headers, <5 req/sec pacing, and transparent `gzip.decompress()` magic-byte handling.
 6. **Empty Vector Store Graceful Degradation:**
