@@ -1,6 +1,6 @@
-# Final Capstone Project Report
-## AI Engineering on Cloud and AIOps Certification
-**Autonomous Multi-Agent Equity Research & Human-in-the-Loop Governance**
+# Final Project Report
+## Autonomous Multi-Agent Equity Research & Human-in-the-Loop Governance
+**AI Investment Research Assistant**
 
 ---
 
@@ -8,8 +8,8 @@
 
 **AI Investment Research Assistant: Autonomous Multi-Agent Equity Research & Human-in-the-Loop Governance**
 
-* **Program:** Enterprise AI Architecture & Autonomous Cloud Operations  
-* **Institution:** AlphaGen Research Systems  
+* **Domain:** Quantitative Financial Intelligence & Multi-Agent Systems  
+* **Architecture:** LangGraph Deterministic DAG, ChromaDB Vector RAG & Gemini 2.5 Flash  
 * **Team Members:**
   1. **Ganesh Swami** — Backend Architecture, LangGraph DAG & Cloud DevOps Lead
   2. **Shradha Gaikwad** — Financial Agent Intelligence & Quantitative Modeling Lead
@@ -19,10 +19,10 @@
 
 ---
 
-# 2. Selected Domain and Theme
+# 2. Project Domain and Scope
 
-* **Domain:** Finance
-* **Selected Theme:** AI Investment Research Assistant
+* **Domain:** Finance & Equity Research
+* **Project Scope:** Autonomous Multi-Agent Investment Research Assistant
 * **Target User Personas:**
   * **Buy-Side & Sell-Side Equity Analysts:** Requiring rapid financial statement extraction and peer multiple benchmarking across large corporate universes.
   * **Portfolio Managers:** Requiring quantitative volatility metrics, drawdown downside risk calculations, and synthesized investment theses before capital deployment.

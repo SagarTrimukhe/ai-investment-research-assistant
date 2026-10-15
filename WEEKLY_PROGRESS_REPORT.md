@@ -1,7 +1,7 @@
 # Sprint-Wise Weekly Progress Report
-## Capstone Project: AI Investment Research Assistant (AI Investment Research Assistant - Finance Domain)
-**Program:** Enterprise AI Architecture & Autonomous Cloud Operations  
-**Institution:** AlphaGen Research Systems  
+## Engineering Project: AI Investment Research Assistant (Finance Domain)
+**Platform:** Autonomous Multi-Agent Equity Research & Quantitative Modeling  
+**Domain:** Financial Technology & Distributed AI Systems  
 
 ### Team Members
 1. **Ganesh Swami** — Backend & Multi-Agent Architecture Lead

@@ -1,6 +1,6 @@
 # AWS Cloud Deployment & S3 Storage Guide
 
-This guide details the step-by-step procedure to deploy the **AI Investment Research Assistant ** to **Amazon Web Services (AWS)** using **EC2** for application hosting, **S3** for persistent cloud document storage, and **Docker Compose** for container orchestration.
+This guide details the step-by-step procedure to deploy the **AI Investment Research Assistant** to **Amazon Web Services (AWS)** using **EC2** for application hosting, **S3** for persistent cloud document storage, and **Docker Compose** for container orchestration.
 
 ---
 
