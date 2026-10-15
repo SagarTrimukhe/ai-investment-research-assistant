@@ -2,37 +2,37 @@ import streamlit as st
 
 
 def inject_custom_css():
-    """Injects high-end, institutional light-theme CSS (FactSet/Bloomberg/PitchBook style)."""
+    """Injects high-end, institutional Sleek Slate Dark theme CSS (TradingView/Bloomberg Dark style)."""
     css = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-    /* Verified Institutional Light Theme Tokens */
+    /* Verified Institutional Sleek Slate Dark Theme Tokens */
     :root {
-        --primary-blue: #2563EB;
-        --primary-hover: #1D4ED8;
-        --primary-light: #EFF6FF;
-        --accent-cyan: #0891B2;
-        --accent-emerald: #059669;
-        --accent-amber: #D97706;
-        --accent-rose: #E11D48;
+        --primary-blue: #3B82F6;
+        --primary-hover: #60A5FA;
+        --primary-light: rgba(59, 130, 246, 0.15);
+        --accent-cyan: #06B6D4;
+        --accent-emerald: #10B981;
+        --accent-amber: #F59E0B;
+        --accent-rose: #F43F5E;
         
-        --bg-canvas: #F8FAFC;
-        --bg-card: #FFFFFF;
-        --bg-card-alt: #F1F5F9;
+        --bg-canvas: #0B0F19;
+        --bg-card: #151D2C;
+        --bg-card-alt: #0F172A;
         
-        --border-subtle: #E2E8F0;
-        --border-medium: #CBD5E1;
-        --border-focus: #93C5FD;
+        --border-subtle: #222F44;
+        --border-medium: #334155;
+        --border-focus: #3B82F6;
         
-        --text-primary: #0F172A;
-        --text-secondary: #334155;
-        --text-muted: #64748B;
-        --text-light: #94A3B8;
+        --text-primary: #F8FAFC;
+        --text-secondary: #CBD5E1;
+        --text-muted: #94A3B8;
+        --text-light: #64748B;
         
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
     }
 
     .stApp {
@@ -49,9 +49,9 @@ def inject_custom_css():
 
     /* Sidebar Styling */
     [data-testid="stSidebar"] {
-        background: #FFFFFF !important;
+        background: #0D131F !important;
         border-right: 1px solid var(--border-subtle) !important;
-        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03) !important;
+        box-shadow: 2px 0 16px rgba(0, 0, 0, 0.4) !important;
     }
 
     [data-testid="stSidebarUserContent"] {
@@ -61,7 +61,7 @@ def inject_custom_css():
     /* Tabs Bar */
     [data-testid="stTabs"] [role="tablist"] {
         gap: 6px !important;
-        background: #F1F5F9 !important;
+        background: #0F172A !important;
         padding: 5px 6px !important;
         border-radius: 12px !important;
         border: 1px solid var(--border-subtle) !important;
@@ -81,13 +81,14 @@ def inject_custom_css():
 
     [data-testid="stTabs"] [role="tab"]:hover {
         color: var(--text-primary) !important;
-        background: rgba(255, 255, 255, 0.6) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
     }
 
     [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-        background: #FFFFFF !important;
-        color: var(--primary-blue) !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        background: #1E293B !important;
+        color: #60A5FA !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid var(--border-medium) !important;
     }
 
     [data-testid="stTabs"] [data-baseweb="tab-border"] {
@@ -96,7 +97,7 @@ def inject_custom_css():
 
     /* Metric Cards */
     [data-testid="stMetric"] {
-        background: #FFFFFF !important;
+        background: #151D2C !important;
         border: 1px solid var(--border-subtle) !important;
         border-radius: 14px !important;
         padding: 18px 22px !important;
@@ -114,7 +115,7 @@ def inject_custom_css():
         right: 0;
         height: 3px;
         background: linear-gradient(90deg, var(--primary-blue), #06B6D4);
-        opacity: 0.8;
+        opacity: 0.9;
     }
 
     [data-testid="stMetric"]:hover {
@@ -141,7 +142,7 @@ def inject_custom_css():
 
     /* Expanders */
     [data-testid="stExpander"] {
-        background: #FFFFFF !important;
+        background: #151D2C !important;
         border: 1px solid var(--border-subtle) !important;
         border-radius: 12px !important;
         margin-bottom: 14px !important;
@@ -165,23 +166,23 @@ def inject_custom_css():
     .stButton > button[kind="primary"], button[data-testid="baseButton-primary"] {
         background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
         color: #FFFFFF !important;
-        border: 1px solid #1D4ED8 !important;
+        border: 1px solid #3B82F6 !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
         font-size: 0.92rem !important;
         padding: 10px 24px !important;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25) !important;
+        box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35) !important;
         transition: all 0.2s ease !important;
     }
 
     .stButton > button[kind="primary"]:hover, button[data-testid="baseButton-primary"]:hover {
         transform: translateY(-1px) !important;
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.45) !important;
         background: #1D4ED8 !important;
     }
 
     .stButton > button[kind="secondary"], button[data-testid="baseButton-secondary"] {
-        background: #FFFFFF !important;
+        background: #151D2C !important;
         color: var(--text-secondary) !important;
         border: 1px solid var(--border-medium) !important;
         border-radius: 10px !important;
@@ -191,15 +192,15 @@ def inject_custom_css():
     }
 
     .stButton > button[kind="secondary"]:hover, button[data-testid="baseButton-secondary"]:hover {
-        background: #F8FAFC !important;
+        background: #1E293B !important;
         border-color: var(--primary-blue) !important;
-        color: var(--primary-blue) !important;
+        color: #60A5FA !important;
     }
 
     /* Input Fields */
     .stTextInput > div > div > input,
     .stSelectbox > div > div {
-        background: #FFFFFF !important;
+        background: #151D2C !important;
         border: 1px solid var(--border-medium) !important;
         border-radius: 10px !important;
         color: var(--text-primary) !important;
@@ -211,12 +212,12 @@ def inject_custom_css():
     .stTextInput > div > div > input:focus,
     .stSelectbox > div > div:focus-within {
         border-color: var(--primary-blue) !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
     }
 
     /* File Uploader */
     [data-testid="stFileUploader"] {
-        background: #FFFFFF !important;
+        background: #151D2C !important;
         border: 2px dashed var(--border-medium) !important;
         border-radius: 14px !important;
         padding: 18px !important;
@@ -225,7 +226,7 @@ def inject_custom_css():
 
     [data-testid="stFileUploader"]:hover {
         border-color: var(--primary-blue) !important;
-        background: #F8FAFC !important;
+        background: #1E293B !important;
     }
 
     /* Alerts */
@@ -233,6 +234,7 @@ def inject_custom_css():
         border-radius: 12px !important;
         border: 1px solid var(--border-subtle) !important;
         box-shadow: var(--shadow-sm) !important;
+        background-color: #151D2C !important;
     }
 
     /* Ticker Tape Animation */
@@ -244,7 +246,7 @@ def inject_custom_css():
     .ticker-tape-container {
         overflow: hidden;
         white-space: nowrap;
-        background: #FFFFFF;
+        background: #151D2C;
         border: 1px solid var(--border-subtle);
         border-radius: 10px;
         padding: 8px 0;
@@ -275,11 +277,12 @@ def inject_custom_css():
     .pulse-dot {
         width: 8px;
         height: 8px;
-        background: #059669;
+        background: #10B981;
         border-radius: 50%;
         display: inline-block;
         margin-right: 6px;
         vertical-align: middle;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
     }
 
     ::-webkit-scrollbar {
@@ -287,14 +290,14 @@ def inject_custom_css():
         height: 6px;
     }
     ::-webkit-scrollbar-track {
-        background: #F1F5F9;
+        background: #0B0F19;
     }
     ::-webkit-scrollbar-thumb {
-        background: #CBD5E1;
+        background: #334155;
         border-radius: 3px;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: #94A3B8;
+        background: #475569;
     }
     </style>
     """
@@ -302,15 +305,15 @@ def inject_custom_css():
 
 
 def render_hero_banner():
-    """Renders an executive, Bloomberg/FactSet-level institutional light-theme banner."""
+    """Renders an executive, Sleek Slate Dark institutional banner."""
     html = """
     <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background: #151D2C;
+        border: 1px solid #222F44;
         border-radius: 16px;
         padding: 24px 30px;
         margin-bottom: 22px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
         position: relative;
         overflow: hidden;
     ">
@@ -320,7 +323,7 @@ def render_hero_banner():
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #2563EB, #0891B2, #059669);
+            background: linear-gradient(90deg, #3B82F6, #06B6D4, #10B981);
         "></div>
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
             <div>
@@ -330,21 +333,21 @@ def render_hero_banner():
                         font-size: 0.70rem;
                         font-weight: 700;
                         letter-spacing: 0.08em;
-                        color: #2563EB;
-                        background: #EFF6FF;
+                        color: #60A5FA;
+                        background: rgba(59, 130, 246, 0.15);
                         padding: 3px 9px;
                         border-radius: 6px;
-                        border: 1px solid #BFDBFE;
+                        border: 1px solid rgba(59, 130, 246, 0.35);
                         text-transform: uppercase;
                     ">✦ AUTONOMOUS EQUITY INTELLIGENCE</span>
                     <span style="
                         font-size: 0.70rem;
                         font-weight: 600;
-                        color: #64748B;
-                        background: #F1F5F9;
+                        color: #94A3B8;
+                        background: #1E293B;
                         padding: 3px 9px;
                         border-radius: 6px;
-                        border: 1px solid #E2E8F0;
+                        border: 1px solid #334155;
                     ">LANGGRAPH v0.2 · GEMINI 2.5 FLASH</span>
                 </div>
                 <h1 style="
@@ -352,11 +355,11 @@ def render_hero_banner():
                     font-size: 2.1rem;
                     font-weight: 800;
                     letter-spacing: -0.02em;
-                    color: #0F172A;
+                    color: #F8FAFC;
                 ">AI Investment Research Assistant</h1>
                 <p style="
                     margin: 5px 0 0 0;
-                    color: #475569;
+                    color: #94A3B8;
                     font-size: 0.94rem;
                     font-weight: 400;
                     max-width: 720px;
@@ -366,17 +369,17 @@ def render_hero_banner():
                 <div style="
                     display: inline-flex;
                     align-items: center;
-                    background: #ECFDF5;
-                    border: 1px solid #A7F3D0;
+                    background: rgba(16, 185, 129, 0.15);
+                    border: 1px solid rgba(16, 185, 129, 0.35);
                     padding: 5px 12px;
                     border-radius: 20px;
                     font-size: 0.76rem;
                     font-weight: 600;
-                    color: #065F46;
+                    color: #34D399;
                 ">
                     <span class="pulse-dot"></span> SEC EDGAR & ChromaDB Online
                 </div>
-                <span style="font-size: 0.74rem; color: #64748B;">Autonomous Equity Intelligence Platform</span>
+                <span style="font-size: 0.74rem; color: #94A3B8;">Autonomous Equity Intelligence Platform</span>
             </div>
         </div>
     </div>
@@ -388,8 +391,8 @@ def render_sidebar_branding():
     """Renders the top sidebar card with logo and project metadata."""
     html = """
     <div style="
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
+        background: #151D2C;
+        border: 1px solid #222F44;
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 18px;
@@ -405,14 +408,14 @@ def render_sidebar_branding():
                 justify-content: center;
                 font-size: 1.15rem;
                 color: #FFFFFF;
-                box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+                box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
             ">📊</div>
             <div>
-                <div style="font-weight: 700; font-size: 1rem; color: #0F172A; letter-spacing: -0.01em;">Research Assistant</div>
-                <div style="font-size: 0.74rem; color: #2563EB; font-weight: 600;">Multi-Agent Equity Suite</div>
+                <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC; letter-spacing: -0.01em;">Research Assistant</div>
+                <div style="font-size: 0.74rem; color: #60A5FA; font-weight: 600;">Multi-Agent Equity Suite</div>
             </div>
         </div>
-        <div style="font-size: 0.74rem; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 8px; margin-top: 6px;">
+        <div style="font-size: 0.74rem; color: #94A3B8; border-top: 1px solid #222F44; padding-top: 8px; margin-top: 6px;">
             Autonomous Equity Intelligence Platform
         </div>
     </div>
@@ -421,11 +424,11 @@ def render_sidebar_branding():
 
 
 def render_sidebar_system_info(s3_status: bool):
-    """Renders clean styled badges for system services in light theme."""
+    """Renders clean styled badges for system services in Sleek Slate Dark mode."""
     storage_label = "AWS S3 Active" if s3_status else "Local + S3 Ready"
-    storage_color = "#065F46" if s3_status else "#0369A1"
-    storage_bg = "#ECFDF5" if s3_status else "#F0F9FF"
-    storage_border = "#A7F3D0" if s3_status else "#BAE6FD"
+    storage_color = "#34D399" if s3_status else "#38BDF8"
+    storage_bg = "rgba(16, 185, 129, 0.15)" if s3_status else "rgba(56, 189, 248, 0.15)"
+    storage_border = "rgba(16, 185, 129, 0.35)" if s3_status else "rgba(56, 189, 248, 0.35)"
 
     html = f"""
     <div style="margin-bottom: 18px;">
@@ -433,7 +436,7 @@ def render_sidebar_system_info(s3_status: bool):
             font-size: 0.70rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #64748B;
+            color: #94A3B8;
             font-weight: 700;
             margin-bottom: 8px;
         ">Active Infrastructure</div>
@@ -443,21 +446,21 @@ def render_sidebar_system_info(s3_status: bool):
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background: #F8FAFC;
+                background: #151D2C;
                 padding: 6px 11px;
                 border-radius: 8px;
-                border: 1px solid #E2E8F0;
+                border: 1px solid #222F44;
             ">
-                <span style="font-size: 0.78rem; color: #475569;">LLM Engine</span>
+                <span style="font-size: 0.78rem; color: #CBD5E1;">LLM Engine</span>
                 <span style="
                     font-size: 0.70rem;
                     font-family: 'JetBrains Mono', monospace;
                     font-weight: 600;
-                    color: #7C3AED;
-                    background: #F5F3FF;
+                    color: #C084FC;
+                    background: rgba(168, 85, 247, 0.15);
                     padding: 2px 7px;
                     border-radius: 5px;
-                    border: 1px solid #DDD6FE;
+                    border: 1px solid rgba(168, 85, 247, 0.35);
                 ">Gemini 2.5 Flash</span>
             </div>
 
@@ -465,21 +468,21 @@ def render_sidebar_system_info(s3_status: bool):
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background: #F8FAFC;
+                background: #151D2C;
                 padding: 6px 11px;
                 border-radius: 8px;
-                border: 1px solid #E2E8F0;
+                border: 1px solid #222F44;
             ">
-                <span style="font-size: 0.78rem; color: #475569;">Vector DB</span>
+                <span style="font-size: 0.78rem; color: #CBD5E1;">Vector DB</span>
                 <span style="
                     font-size: 0.70rem;
                     font-family: 'JetBrains Mono', monospace;
                     font-weight: 600;
-                    color: #0369A1;
-                    background: #F0F9FF;
+                    color: #38BDF8;
+                    background: rgba(56, 189, 248, 0.15);
                     padding: 2px 7px;
                     border-radius: 5px;
-                    border: 1px solid #BAE6FD;
+                    border: 1px solid rgba(56, 189, 248, 0.35);
                 ">ChromaDB</span>
             </div>
 
@@ -487,12 +490,12 @@ def render_sidebar_system_info(s3_status: bool):
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background: #F8FAFC;
+                background: #151D2C;
                 padding: 6px 11px;
                 border-radius: 8px;
-                border: 1px solid #E2E8F0;
+                border: 1px solid #222F44;
             ">
-                <span style="font-size: 0.78rem; color: #475569;">Storage</span>
+                <span style="font-size: 0.78rem; color: #CBD5E1;">Storage</span>
                 <span style="
                     font-size: 0.70rem;
                     font-family: 'JetBrains Mono', monospace;
@@ -511,10 +514,10 @@ def render_sidebar_system_info(s3_status: bool):
 
 
 def render_sidebar_tickers(indexed_list):
-    """Renders clean ticker pill tags."""
+    """Renders clean ticker pill tags in Sleek Slate Dark mode."""
     pills = "".join([
         f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:0.74rem; font-weight:700; '
-        f'color:#065F46; background:#ECFDF5; border:1px solid #A7F3D0; '
+        f'color:#34D399; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.35); '
         f'padding:2px 8px; border-radius:5px; display:inline-block; margin:2px;">{t}</span>'
         for t in indexed_list
     ]) if indexed_list else '<span style="color:#64748B; font-size:0.78rem;">No filings indexed yet.</span>'
@@ -525,7 +528,7 @@ def render_sidebar_tickers(indexed_list):
             font-size: 0.70rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #64748B;
+            color: #94A3B8;
             font-weight: 700;
             margin-bottom: 6px;
         ">Indexed Filings ({len(indexed_list)})</div>
@@ -542,29 +545,29 @@ def render_sidebar_footer():
     html = """
     <div style="
         font-size: 0.70rem;
-        color: #94A3B8;
-        border-top: 1px solid #E2E8F0;
+        color: #64748B;
+        border-top: 1px solid #222F44;
         padding-top: 14px;
         margin-top: 20px;
         text-align: center;
     ">
-        Autonomous Equity Intelligence · Capstone Final
+        Autonomous Equity Intelligence · Enterprise Platform
     </div>
     """
     st.sidebar.html(html)
 
 
 def render_section_title(title: str, subtitle: str = "", icon: str = ""):
-    """Renders a styled section title with an accent bar in clean light mode."""
+    """Renders a styled section title with an accent bar in Sleek Slate Dark mode."""
     icon_html = f'<span style="margin-right: 8px; font-size: 1.15rem;">{icon}</span>' if icon else ""
-    sub_html = f'<div style="font-size: 0.84rem; color: #64748B; margin-top: 3px;">{subtitle}</div>' if subtitle else ""
+    sub_html = f'<div style="font-size: 0.84rem; color: #94A3B8; margin-top: 3px;">{subtitle}</div>' if subtitle else ""
     html = f"""
     <div style="margin-top: 18px; margin-bottom: 14px;">
         <div style="display: flex; align-items: center;">
             <div style="
                 width: 3px;
                 height: 20px;
-                background: #2563EB;
+                background: #3B82F6;
                 border-radius: 2px;
                 margin-right: 10px;
             "></div>
@@ -573,7 +576,7 @@ def render_section_title(title: str, subtitle: str = "", icon: str = ""):
                 font-size: 1.25rem;
                 font-weight: 700;
                 letter-spacing: -0.01em;
-                color: #0F172A;
+                color: #F8FAFC;
                 display: flex;
                 align-items: center;
             ">{icon_html}{title}</h3>
@@ -584,18 +587,18 @@ def render_section_title(title: str, subtitle: str = "", icon: str = ""):
     st.html(html)
 
 
-def render_glass_card(title: str, items: list, icon: str = "📌", accent_color: str = "#2563EB"):
-    """Renders a clean white card container with structured bullet points."""
-    items_html = "".join([f'<li style="margin-bottom: 6px; color: #334155; line-height: 1.5;">{item}</li>' for item in items])
+def render_glass_card(title: str, items: list, icon: str = "📌", accent_color: str = "#3B82F6"):
+    """Renders a sleek slate card container with structured bullet points."""
+    items_html = "".join([f'<li style="margin-bottom: 6px; color: #CBD5E1; line-height: 1.5;">{item}</li>' for item in items])
     card_html = f"""
     <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background: #151D2C;
+        border: 1px solid #222F44;
         border-top: 3px solid {accent_color};
         border-radius: 12px;
         padding: 16px 18px;
         margin-bottom: 14px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     ">
         <div style="
             display: flex;
@@ -603,7 +606,7 @@ def render_glass_card(title: str, items: list, icon: str = "📌", accent_color:
             gap: 7px;
             font-size: 0.92rem;
             font-weight: 700;
-            color: #0F172A;
+            color: #F8FAFC;
             margin-bottom: 10px;
         ">
             <span>{icon}</span>
@@ -618,19 +621,20 @@ def render_glass_card(title: str, items: list, icon: str = "📌", accent_color:
 
 
 def render_executive_summary(exec_sum: str):
-    """Renders an executive summary callout in clean light mode."""
+    """Renders an executive summary callout in Sleek Slate Dark mode."""
     html = f"""
     <div style="
-        background: #EFF6FF;
-        border-left: 3px solid #2563EB;
+        background: rgba(59, 130, 246, 0.10);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-left: 3px solid #3B82F6;
         border-radius: 10px;
         padding: 14px 18px;
         margin: 12px 0 18px 0;
-        color: #1E293B;
+        color: #E2E8F0;
         font-size: 0.92rem;
         line-height: 1.6;
     ">
-        <strong style="color: #1D4ED8; font-size: 0.95rem;">Executive Summary:</strong><br/>
+        <strong style="color: #60A5FA; font-size: 0.95rem;">Executive Summary:</strong><br/>
         {exec_sum}
     </div>
     """
@@ -638,7 +642,7 @@ def render_executive_summary(exec_sum: str):
 
 
 def render_ticker_tape():
-    """Renders a clean horizontal market ticker tape."""
+    """Renders a clean horizontal market ticker tape in Sleek Slate Dark mode."""
     sample_tickers = [
         {"ticker": "AAPL", "price": "$232.15", "change": "+1.42%", "up": True},
         {"ticker": "NVDA", "price": "$138.07", "change": "+3.13%", "up": True},
@@ -651,15 +655,15 @@ def render_ticker_tape():
 
     items_html = ""
     for item in sample_tickers * 2:
-        color = "#059669" if item["up"] else "#DC2626"
+        color = "#10B981" if item["up"] else "#F43F5E"
         arrow = "▲" if item["up"] else "▼"
         items_html += f"""
         <span class="ticker-item">
-            <strong style="color: #0F172A;">{item['ticker']}</strong>
-            <span style="color: #475569;">{item['price']}</span>
+            <strong style="color: #F8FAFC;">{item['ticker']}</strong>
+            <span style="color: #94A3B8;">{item['price']}</span>
             <span style="color: {color}; font-weight: 600;">{arrow} {item['change']}</span>
         </span>
-        <span style="color: #CBD5E1; margin: 0 4px;">•</span>
+        <span style="color: #334155; margin: 0 4px;">•</span>
         """
 
     tape_html = f"""
@@ -673,7 +677,7 @@ def render_ticker_tape():
 
 
 def render_52w_range_bar(current_price: float, low: float, high: float):
-    """Renders a visual 52-week price range meter in clean light mode."""
+    """Renders a visual 52-week price range meter in Sleek Slate Dark mode."""
     if not (current_price and low and high and high > low):
         return
 
@@ -681,24 +685,24 @@ def render_52w_range_bar(current_price: float, low: float, high: float):
 
     html = f"""
     <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background: #151D2C;
+        border: 1px solid #222F44;
         border-radius: 12px;
         padding: 14px 18px;
         margin: 14px 0 18px 0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     ">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B; font-weight: 700;">
+            <span style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.07em; color: #94A3B8; font-weight: 700;">
                 52-Week Range Position
             </span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #2563EB;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #60A5FA;">
                 {pct:.1f}% of Range
             </span>
         </div>
         <div style="
             position: relative;
-            background: #E2E8F0;
+            background: #1E293B;
             height: 8px;
             border-radius: 4px;
             overflow: visible;
@@ -707,7 +711,7 @@ def render_52w_range_bar(current_price: float, low: float, high: float):
             <div style="
                 width: {pct:.1f}%;
                 height: 100%;
-                background: linear-gradient(90deg, #059669 0%, #2563EB 100%);
+                background: linear-gradient(90deg, #10B981 0%, #3B82F6 100%);
                 border-radius: 4px;
                 transition: width 0.8s ease;
             "></div>
@@ -718,15 +722,15 @@ def render_52w_range_bar(current_price: float, low: float, high: float):
                 width: 14px;
                 height: 14px;
                 border-radius: 50%;
-                background: #FFFFFF;
-                border: 2px solid #2563EB;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+                background: #151D2C;
+                border: 2px solid #3B82F6;
+                box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
             "></div>
         </div>
-        <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #475569;">
-            <span>52W Low: <strong style="color: #DC2626;">${low:.2f}</strong></span>
-            <span>Current: <strong style="color: #0F172A;">${current_price:.2f}</strong></span>
-            <span>52W High: <strong style="color: #059669;">${high:.2f}</strong></span>
+        <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #94A3B8;">
+            <span>52W Low: <strong style="color: #F43F5E;">${low:.2f}</strong></span>
+            <span>Current: <strong style="color: #F8FAFC;">${current_price:.2f}</strong></span>
+            <span>52W High: <strong style="color: #10B981;">${high:.2f}</strong></span>
         </div>
     </div>
     """
@@ -734,7 +738,7 @@ def render_52w_range_bar(current_price: float, low: float, high: float):
 
 
 def render_agent_stepper_visualizer(completed_nodes: list = None):
-    """Renders a visual stepper showing the active multi-agent pipeline in light mode."""
+    """Renders a visual stepper showing the active multi-agent pipeline in Sleek Slate Dark mode."""
     nodes = [
         ("Router", "🎯", "router"),
         ("10-K Retrieval", "📂", "market_research"),
@@ -750,9 +754,9 @@ def render_agent_stepper_visualizer(completed_nodes: list = None):
     for name, icon, key in nodes:
         is_done = key in completed_nodes
         is_active = (not is_done) and (len(completed_nodes) == [k for _, _, k in nodes].index(key))
-        bg = "#ECFDF5" if is_done else ("#EFF6FF" if is_active else "#F8FAFC")
-        border = "#A7F3D0" if is_done else ("#BFDBFE" if is_active else "#E2E8F0")
-        color = "#065F46" if is_done else ("#1D4ED8" if is_active else "#64748B")
+        bg = "rgba(16, 185, 129, 0.15)" if is_done else ("rgba(59, 130, 246, 0.15)" if is_active else "#151D2C")
+        border = "rgba(16, 185, 129, 0.35)" if is_done else ("rgba(59, 130, 246, 0.35)" if is_active else "#222F44")
+        color = "#34D399" if is_done else ("#60A5FA" if is_active else "#94A3B8")
 
         stepper_html += f"""
         <div style="
@@ -769,7 +773,7 @@ def render_agent_stepper_visualizer(completed_nodes: list = None):
         ">
             <span>{icon}</span>
             <span>{name}</span>
-            {'<span style="color:#059669; margin-left:2px;">✓</span>' if is_done else ''}
+            {'<span style="color:#10B981; margin-left:2px;">✓</span>' if is_done else ''}
         </div>
         """
     stepper_html += '</div>'
