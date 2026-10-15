@@ -24,51 +24,62 @@ from app.services.nasdaq_universe import (
     get_nasdaq_tickers,
     get_nasdaq_company_name,
 )
+from app.ui_theme import (
+    inject_custom_css,
+    render_hero_banner,
+    render_ticker_tape,
+    render_52w_range_bar,
+    render_agent_stepper_visualizer,
+    render_sidebar_branding,
+    render_sidebar_system_info,
+    render_sidebar_tickers,
+    render_section_title,
+    render_glass_card,
+    render_executive_summary,
+    render_sidebar_footer,
+)
 
 st.set_page_config(
     page_title="AI Investment Research Assistant",
     page_icon="📊",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-# Sidebar: System configuration and status
-st.sidebar.title("Research Assistant")
-st.sidebar.caption("Course Project • Multi-Agent Financial Research")
+# Apply custom dark modern design system
+inject_custom_css()
 
-st.sidebar.subheader("System Info")
-st.sidebar.text("LLM: Gemini 1.5 Flash")
-st.sidebar.text("Database: ChromaDB")
+# Sidebar: Modern branding and status badges
+render_sidebar_branding()
 s3_status = S3Service().is_configured()
-st.sidebar.text(f"Storage: {'AWS S3 (Active)' if s3_status else 'Local + S3 Ready'}")
+render_sidebar_system_info(s3_status)
 
 indexed_list = get_indexed_tickers()
-st.sidebar.subheader(f"Indexed Companies ({len(indexed_list)})")
-if indexed_list:
-    st.sidebar.write(", ".join(f"`{t}`" for t in indexed_list))
-else:
-    st.sidebar.caption("No filings indexed yet.")
-
-st.sidebar.divider()
-st.sidebar.caption("Student Project • Final Submission")
+render_sidebar_tickers(indexed_list)
+render_sidebar_footer()
 
 
-# Main title
-st.title("📊 AI Investment Research Assistant")
-st.caption("Automated equity research and financial report analysis using multi-agent workflows.")
+# Top Modern Hero Banner & Live Animated Ticker Tape
+render_hero_banner()
+render_ticker_tape()
 
 tab_ingest, tab_analysis, tab_review = st.tabs([
-    "Document Ingestion",
-    "Research & Analysis",
-    "Analyst Review (HITL)",
+    "📥 Document Ingestion",
+    "📈 Research & Analysis",
+    "🛡️ Analyst Review (HITL)",
 ])
+
 
 
 # -------------------------------------------------------------
 # Tab 1: Document Ingestion
 # -------------------------------------------------------------
 with tab_ingest:
-    st.subheader("Upload Filings & Research Reports")
-    st.caption("Upload company 10-K, 10-Q, or research reports (PDF or TXT) to index into the vector database.")
+    render_section_title(
+        "Upload Filings & Research Reports",
+        "Upload company 10-K, 10-Q, or research reports (PDF or TXT) to index into the vector database.",
+        icon="📥",
+    )
 
     ingest_col1, ingest_col2 = st.columns([1, 2])
     with ingest_col1:
@@ -190,7 +201,11 @@ with tab_ingest:
     st.divider()
 
     # Knowledge Base Status
-    st.subheader("Knowledge Base Status (ChromaDB)")
+    render_section_title(
+        "Knowledge Base Status (ChromaDB)",
+        "Live vector indexing metrics across stored company filings",
+        icon="🗄️",
+    )
     kb_summary = get_indexed_summary()
     if kb_summary:
         total_companies = len(kb_summary)
@@ -228,13 +243,29 @@ with tab_ingest:
 # Tab 2: Research & Analysis
 # -------------------------------------------------------------
 with tab_analysis:
-    st.subheader("Research Target")
+    render_section_title(
+        "Research Target Selection",
+        "Configure target asset and benchmark peer for automated multi-agent investigation",
+        icon="🎯",
+    )
+
+    st.html('<div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#94A3B8; font-weight:700; margin-bottom:8px;">⚡ Quick Select Benchmark Assets:</div>')
+    q_cols = st.columns(7)
+    quick_picks = ["AAPL", "NVDA", "MSFT", "META", "AMZN", "GOOGL", "TSLA"]
+    for q_col, q_sym in zip(q_cols, quick_picks):
+        if q_col.button(q_sym, key=f"quick_{q_sym}", use_container_width=True):
+            st.session_state["target_ticker_val"] = q_sym
+            st.session_state["benchmark_val"] = "MSFT" if q_sym != "MSFT" else "GOOGL"
+            st.rerun()
+
+    target_default = st.session_state.get("target_ticker_val", "AAPL")
+    bench_default = st.session_state.get("benchmark_val", "MSFT")
 
     col1, col2 = st.columns(2)
     with col1:
-        ticker = st.text_input("Target Stock Ticker", value="AAPL").upper().strip()
+        ticker = st.text_input("Target Stock Ticker", value=target_default, key="target_ticker_field").upper().strip()
     with col2:
-        benchmark = st.text_input("Benchmark Competitor Ticker", value="MSFT").upper().strip()
+        benchmark = st.text_input("Benchmark Competitor Ticker", value=bench_default, key="bench_ticker_field").upper().strip()
 
     indexed_tickers = get_indexed_tickers()
     if indexed_tickers:
@@ -272,7 +303,11 @@ with tab_analysis:
                             st.error(f"Error processing file: {e}")
 
     # Market Price History
-    st.subheader("Market Price Overview")
+    render_section_title(
+        "Market Price Overview",
+        "Real-time market quotes and historical price trends via Yahoo Finance",
+        icon="📈",
+    )
     _, m_period_col = st.columns([3, 1])
     with m_period_col:
         period = st.selectbox(
@@ -283,6 +318,21 @@ with tab_analysis:
         )
 
     overview = fetch_stock_overview(ticker)
+    if overview and overview.get("name"):
+        sector_info = []
+        if overview.get("sector"):
+            sector_info.append(overview["sector"])
+        if overview.get("industry"):
+            sector_info.append(overview["industry"])
+        meta_sub = " · ".join(sector_info)
+
+        st.markdown(f"### {overview['name']} (`{ticker}`)")
+        if meta_sub:
+            st.caption(f"**Classification:** {meta_sub}")
+        if overview.get("description"):
+            with st.expander("🏢 Company Overview & Business Summary", expanded=False):
+                st.write(overview["description"])
+
     if overview and overview.get("current_price"):
         c1, c2, c3 = st.columns(3)
         c1.metric(
@@ -294,6 +344,13 @@ with tab_analysis:
             c2.metric("52-Week High", f"${overview['fifty_two_week_high']:.2f}")
         if overview.get("fifty_two_week_low"):
             c3.metric("52-Week Low", f"${overview['fifty_two_week_low']:.2f}")
+
+        # Dynamic 52-Week Range Bar
+        render_52w_range_bar(
+            overview.get("current_price"),
+            overview.get("fifty_two_week_low"),
+            overview.get("fifty_two_week_high"),
+        )
 
     history_df = fetch_price_history(ticker, period=period)
     if not history_df.empty:
@@ -312,9 +369,19 @@ with tab_analysis:
         state = dict(initial_input)
 
         with st.status(f"Executing multi-agent research for {ticker} vs. {bench_val}...", expanded=True) as status_box:
+            completed_steps = []
+            stepper_placeholder = st.empty()
+            with stepper_placeholder.container():
+                render_agent_stepper_visualizer(completed_steps)
+
             st.write("Initializing workflow parameters...")
             for step in workflow.stream(initial_input, thread_id=thread_id):
                 for node_name, updated_state in step.items():
+                    if node_name not in completed_steps:
+                        completed_steps.append(node_name)
+                    with stepper_placeholder.container():
+                        render_agent_stepper_visualizer(completed_steps)
+
                     if node_name == "__interrupt__":
                         st.write("⏸️ Paused at Human-in-the-Loop review gate.")
                     elif isinstance(updated_state, dict):
@@ -345,20 +412,20 @@ with tab_analysis:
         risks = state.get("risks", [])
 
         if metrics:
-            st.subheader("Key Financial Metrics")
+            render_section_title("Key Financial Metrics", "Fundamental accounting metrics extracted from 10-K SEC filings", icon="📊")
             m_cols = st.columns(len(metrics))
             for col, (k, v) in zip(m_cols, metrics.items()):
                 label = k.replace("_", " ").title()
                 col.metric(label, v)
 
         if summary:
-            st.subheader("Fundamental Analysis Summary")
+            render_section_title("Fundamental Analysis Summary", "Automated qualitative breakdown from filing notes", icon="📑")
             st.write(summary)
 
         # Display Sentiment & Sector Trends
         sentiment = state.get("sentiment", {})
         if sentiment:
-            st.subheader("Market Sentiment & Sector Trends")
+            render_section_title("Market Sentiment & Sector Trends", "Real-time macro catalysts, sentiment scoring, and headwind analysis", icon="🌐")
             s_col1, s_col2 = st.columns(2)
             sentiment_label = sentiment.get("label", "Neutral")
             with s_col1:
@@ -374,21 +441,17 @@ with tab_analysis:
             with col_tail:
                 tailwinds = sentiment.get("sector_tailwinds", [])
                 if tailwinds:
-                    st.write("**Sector Catalysts & Tailwinds:**")
-                    for item in tailwinds:
-                        st.write(f"- {item}")
+                    render_glass_card("Sector Catalysts & Tailwinds", tailwinds, icon="⚡", accent_color="#10B981")
             with col_risk:
                 macro_risks = sentiment.get("macro_risks", [])
                 if macro_risks:
-                    st.write("**Macro & Market Risks:**")
-                    for item in macro_risks:
-                        st.write(f"- {item}")
+                    render_glass_card("Macro & Market Risks", macro_risks, icon="📉", accent_color="#F59E0B")
 
         # Display Peer Comparison
         comparison = state.get("comparison", {})
         if comparison:
             bench_ticker = comparison.get("benchmark_ticker", "Peer")
-            st.subheader(f"Peer Comparison ({ticker} vs. {bench_ticker})")
+            render_section_title(f"Peer Comparison ({ticker} vs. {bench_ticker})", "Relative valuation multiples and strategic positioning", icon="⚖️")
 
             verdict = comparison.get("verdict", "")
             if verdict:
@@ -414,26 +477,21 @@ with tab_analysis:
             with c_adv:
                 advantages = comparison.get("target_advantages", [])
                 if advantages:
-                    st.write(f"**Competitive Strengths:**")
-                    for adv in advantages:
-                        st.write(f"- {adv}")
+                    render_glass_card(f"Competitive Strengths ({ticker})", advantages, icon="🛡️", accent_color="#10B981")
             with c_vuln:
                 vulns = comparison.get("target_vulnerabilities", [])
                 if vulns:
-                    st.write(f"**Vulnerabilities vs. {bench_ticker}:**")
-                    for vuln in vulns:
-                        st.write(f"- {vuln}")
+                    render_glass_card(f"Vulnerabilities vs. {bench_ticker}", vulns, icon="⚠️", accent_color="#F43F5E")
 
         # Display Filing Risk Factors
         if risks:
-            st.subheader("SEC Filing Risk Factors")
-            for r in risks:
-                st.write(f"- {r}")
+            render_section_title("SEC Filing Risk Factors", "Item 1A risk disclosure analysis", icon="⚠️")
+            render_glass_card("Disclosed Risk Factors", risks, icon="⚠️", accent_color="#F59E0B")
 
         # Display Draft Thesis
         draft = state.get("draft_thesis", {})
         if draft:
-            st.subheader("Draft Investment Thesis")
+            render_section_title("Draft Investment Thesis", "Synthesized target price, thesis pillars, and recommendation", icon="💡")
             rating = draft.get("rating", state.get("rating", "HOLD"))
             target_p = draft.get("target_price", state.get("target_price", "N/A"))
             upside = draft.get("upside_potential_pct", "N/A")
@@ -448,28 +506,31 @@ with tab_analysis:
 
             exec_sum = draft.get("executive_summary", "")
             if exec_sum:
-                st.write(f"**Executive Summary:** {exec_sum}")
+                render_executive_summary(exec_sum)
 
             t_cols = st.columns(3)
             with t_cols[0]:
-                st.write("**Core Thesis Points:**")
-                for tp in draft.get("thesis_points", []):
-                    st.write(f"- {tp}")
+                render_glass_card("Core Thesis Points", draft.get("thesis_points", []), icon="🎯", accent_color="#6366F1")
             with t_cols[1]:
-                st.write("**Identified Risks:**")
-                for rk in draft.get("key_risks", []):
-                    st.write(f"- {rk}")
+                render_glass_card("Identified Risks", draft.get("key_risks", []), icon="⚠️", accent_color="#F43F5E")
             with t_cols[2]:
-                st.write("**Catalysts:**")
-                for cat in draft.get("catalysts", []):
-                    st.write(f"- {cat}")
+                render_glass_card("Catalysts & Drivers", draft.get("catalysts", []), icon="🚀", accent_color="#10B981")
+
+            red_pill = draft.get("red_pill_insights", "")
+            if red_pill:
+                st.markdown("**🔴 Red Pill Insights** *(Contrarian View)*")
+                st.warning(red_pill)
 
 
 # -------------------------------------------------------------
 # Tab 3: Analyst Review (HITL)
 # -------------------------------------------------------------
 with tab_review:
-    st.subheader("Analyst Review & Sign-Off Gate")
+    render_section_title(
+        "Analyst Review & Sign-Off Gate",
+        "Human-in-the-Loop governance to audit, edit, and certify AI-generated investment theses",
+        icon="🛡️",
+    )
 
     latest = st.session_state.get("latest_research")
     if not latest or not latest.get("draft_thesis"):
@@ -506,22 +567,23 @@ with tab_review:
 
         exec_sum = draft.get("executive_summary", "")
         if exec_sum:
-            st.write(f"**Executive Summary:** {exec_sum}")
+            render_executive_summary(exec_sum)
 
         col_tp, col_rk = st.columns(2)
         with col_tp:
-            st.write("**Thesis Points:**")
-            for tp in draft.get("thesis_points", []):
-                st.write(f"- {tp}")
+            render_glass_card("Thesis Points", draft.get("thesis_points", []), icon="🎯", accent_color="#6366F1")
         with col_rk:
-            st.write("**Risk Factors:**")
-            for rk in draft.get("key_risks", []):
-                st.write(f"- {rk}")
+            render_glass_card("Risk Factors", draft.get("key_risks", []), icon="⚠️", accent_color="#F43F5E")
+
+        red_pill = draft.get("red_pill_insights", "")
+        if red_pill:
+            st.markdown("**🔴 Red Pill Insights** *(Contrarian View)*")
+            st.warning(red_pill)
 
         st.divider()
 
         # Review Form
-        st.subheader("Analyst Decision")
+        render_section_title("Analyst Decision & Audit Log", "Record human approval decision and discretionary oversight", icon="✍️")
         with st.form("hitl_review_form"):
             decision = st.radio(
                 "Select action:",
@@ -560,7 +622,7 @@ with tab_review:
 
         # Report Export & S3 Cloud Storage Sync
         st.divider()
-        st.subheader("Report Export & Cloud Storage (AWS S3)")
+        render_section_title("Report Export & Cloud Storage (AWS S3)", "Download certified markdown memo or sync directly to S3 storage bucket", icon="☁️")
         exp_col1, exp_col2 = st.columns(2)
         with exp_col1:
             exporter = ExportService()
@@ -580,3 +642,4 @@ with tab_review:
                     st.success(f"Report archived to `{s3_uri}`")
                 else:
                     st.info("AWS S3 credentials not provided in `.env`. Saved to `data/processed/` locally.")
+
