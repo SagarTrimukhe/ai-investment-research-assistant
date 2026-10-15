@@ -42,6 +42,10 @@ class ExportService:
         for cat in draft.get("catalysts", []):
             lines.append(f"- {cat}")
 
+        red_pill = draft.get("red_pill_insights", "")
+        if red_pill:
+            lines.extend(["", "## Red Pill Insights", red_pill])
+
         approved = report_data.get("approved")
         feedback = report_data.get("feedback")
         if approved is not None:
