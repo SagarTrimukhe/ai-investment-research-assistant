@@ -7,6 +7,7 @@ def inject_custom_css():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
+    /* Verified Institutional Light Theme Tokens */
     :root {
         --primary-blue: #2563EB;
         --primary-hover: #1D4ED8;
