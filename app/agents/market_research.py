@@ -35,11 +35,14 @@ def market_research_node(state: AgentState) -> dict:
         docs = []
 
     if not docs:
-        all_docs = store.similarity_search(query, k=4)
-        if ticker == "AAPL":
-            docs = all_docs
-        else:
-            docs = [d for d in all_docs if d.metadata.get("ticker") == ticker]
+        try:
+            all_docs = store.similarity_search(query, k=4)
+            if ticker == "AAPL":
+                docs = all_docs
+            else:
+                docs = [d for d in all_docs if d.metadata.get("ticker") == ticker]
+        except Exception:
+            docs = []
 
     if not docs:
         # Fallback to verified live market registry if no filing is uploaded

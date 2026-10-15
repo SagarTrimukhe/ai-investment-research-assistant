@@ -495,34 +495,46 @@ with tab_analysis:
             with stepper_placeholder.container():
                 render_agent_stepper_visualizer(completed_steps)
 
-            st.write("Initializing workflow parameters...")
-            for step in workflow.stream(initial_input, thread_id=thread_id):
-                for node_name, updated_state in step.items():
-                    if node_name not in completed_steps:
-                        completed_steps.append(node_name)
-                    with stepper_placeholder.container():
-                        render_agent_stepper_visualizer(completed_steps)
+            try:
+                st.write("Initializing workflow parameters...")
+                for step in workflow.stream(initial_input, thread_id=thread_id):
+                    for node_name, updated_state in step.items():
+                        if node_name not in completed_steps:
+                            completed_steps.append(node_name)
+                        with stepper_placeholder.container():
+                            render_agent_stepper_visualizer(completed_steps)
 
-                    if node_name == "__interrupt__":
-                        st.write("⏸️ Paused at Human-in-the-Loop review gate.")
-                    elif isinstance(updated_state, dict):
-                        state.update(updated_state)
-                        if node_name == "router":
-                            st.write(f"• Target symbol: `{ticker}`, Benchmark: `{bench_val}`")
-                        elif node_name == "market_research":
-                            st.write("• Extracted 10-K financial fundamentals via vector retrieval")
-                        elif node_name == "trend_analysis":
-                            st.write("• Gathered market sentiment and sector trends")
-                        elif node_name == "comparative_analysis":
-                            st.write(f"• Completed peer comparative valuation vs. {bench_val}")
-                        elif node_name == "summary_agent":
-                            st.write("• Drafted investment thesis and risk assessment")
+                        if node_name == "__interrupt__":
+                            st.write("⏸️ Paused at Human-in-the-Loop review gate.")
+                        elif isinstance(updated_state, dict):
+                            state.update(updated_state)
+                            if node_name == "router":
+                                st.write(f"• Target symbol: `{ticker}`, Benchmark: `{bench_val}`")
+                            elif node_name == "market_research":
+                                st.write("• Extracted 10-K financial fundamentals via vector retrieval")
+                            elif node_name == "trend_analysis":
+                                st.write("• Gathered market sentiment and sector trends")
+                            elif node_name == "comparative_analysis":
+                                st.write(f"• Completed peer comparative valuation vs. {bench_val}")
+                            elif node_name == "summary_agent":
+                                st.write("• Drafted investment thesis and risk assessment")
 
-            status_box.update(label=f"Research pipeline completed for {ticker}", state="complete", expanded=False)
-            st.session_state["workflow"] = workflow
-            st.session_state["thread_id"] = thread_id
-            st.session_state["latest_research"] = state
-            st.session_state["awaiting_approval"] = True
+                status_box.update(label=f"Research pipeline completed for {ticker}", state="complete", expanded=False)
+                st.session_state["workflow"] = workflow
+                st.session_state["thread_id"] = thread_id
+                st.session_state["latest_research"] = state
+                st.session_state["awaiting_approval"] = True
+            except Exception as exc:
+                status_box.update(label=f"Pipeline error for {ticker}", state="error", expanded=True)
+                err_msg = str(exc)
+                if "429" in err_msg or "quota" in err_msg.lower():
+                    st.error(
+                        "⚠️ **Google Gemini API Free-Tier Quota Limit Reached (429)**\n\n"
+                        "Google's free-tier rate limit for embedding/generation requests was temporarily saturated. "
+                        "The platform automatically retries with backoff. Please wait **30–40 seconds** for Google's quota window to reset, then click **Run Research Pipeline** again."
+                    )
+                else:
+                    st.error(f"Error during agent execution: {exc}")
 
         st.info("The research workflow has paused for human review. Please switch to the **Analyst Review (HITL)** tab to inspect or approve the thesis.")
 
