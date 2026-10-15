@@ -81,21 +81,124 @@ with tab_ingest:
         icon="📥",
     )
 
-    ingest_col1, ingest_col2 = st.columns([1, 2])
+    ingest_col1, ingest_col2 = st.columns([1.2, 1.8])
     with ingest_col1:
-        default_ticker = st.text_input(
-            "Associated Stock Ticker",
-            value="AAPL",
+        raw_ticker_input = st.text_input(
+            "Associated Stock Ticker or Company Name",
+            value=st.session_state.get("ingest_ticker_input", "AAPL"),
             key="ingest_ticker_input",
-            help="Stock ticker symbol for the document (e.g., AAPL, MSFT, NVDA)",
-        ).upper().strip()
+            help="Enter a stock ticker (e.g., AAPL, NVDA, TSLA) or company name (e.g., Apple, Tesla, Nvidia)",
+        ).strip()
+        default_ticker = detect_nasdaq_ticker(raw_ticker_input) or raw_ticker_input.upper().strip()
     with ingest_col2:
         uploaded_files = st.file_uploader(
-            "Select Document Files",
+            "Select Custom Document Files (Optional)",
             type=["txt", "pdf"],
             accept_multiple_files=True,
             key="general_uploader",
+            help="Upload your own PDF or TXT annual/quarterly reports for the selected company.",
         )
+
+    # -------------------------------------------------------------
+    # Instant Stock Feedback & One-Click 10-K Ingestion Card
+    # -------------------------------------------------------------
+    if default_ticker:
+        is_indexed = is_ticker_indexed(default_ticker)
+        company_name = get_nasdaq_company_name(default_ticker)
+
+        # Check local pre-loaded 10-K filing availability
+        reports_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "nasdaq_reports"))
+        local_report_path = os.path.join(reports_dir, f"{default_ticker}_10K_filing.txt")
+        has_local_report = os.path.exists(local_report_path)
+
+        # Fetch live company overview snapshot
+        stock_info = fetch_stock_overview(default_ticker)
+        display_name = stock_info.get("name") or company_name
+        price = stock_info.get("current_price")
+        change_pct = stock_info.get("change_pct", 0.0)
+        sector = stock_info.get("sector") or (NASDAQ_UNIVERSE.get(default_ticker, {}).get("sector", "Equities"))
+        industry = stock_info.get("industry") or (NASDAQ_UNIVERSE.get(default_ticker, {}).get("industry", "Financial Asset"))
+
+        price_str = f"${price:.2f}" if price else "Quote Active"
+        change_color = "#10B981" if change_pct >= 0 else "#F43F5E"
+        change_arrow = "▲" if change_pct >= 0 else "▼"
+        change_html = f"<span style='color: {change_color}; font-weight: 700; font-family: monospace;'>{change_arrow} {abs(change_pct):.2f}%</span>" if price else ""
+
+        if is_indexed:
+            status_badge = "<span style='background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600;'>✓ Filings Indexed in Vector DB</span>"
+        elif has_local_report:
+            status_badge = "<span style='background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #60A5FA; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600;'>📄 10-K Filing Ready to Ingest</span>"
+        else:
+            status_badge = "<span style='background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #FBBF24; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600;'>○ Not Indexed (Upload Below)</span>"
+
+        resolved_note = f"<span style='color: #60A5FA; font-size: 0.76rem; margin-left: 6px;'>[Resolved from \"{raw_ticker_input}\"]</span>" if raw_ticker_input.upper() != default_ticker else ""
+
+        st.html(f"""
+        <div style="
+            background: #151D2C;
+            border: 1px solid #222F44;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 12px 0 16px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 800; color: #F8FAFC;">{default_ticker}</span>
+                        <span style="font-size: 1rem; font-weight: 600; color: #CBD5E1;">{display_name}</span>
+                        {resolved_note}
+                        {status_badge}
+                    </div>
+                    <div style="font-size: 0.80rem; color: #94A3B8; margin-top: 4px;">
+                        Sector: <strong style="color: #F8FAFC;">{sector}</strong> &nbsp;•&nbsp; Industry: <strong style="color: #F8FAFC;">{industry}</strong>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; font-weight: 700; color: #F8FAFC;">
+                        {price_str} {change_html}
+                    </div>
+                    <div style="font-size: 0.72rem; color: #64748B;">Live SEC & Market Telemetry</div>
+                </div>
+            </div>
+        </div>
+        """)
+
+        # Quick Action Buttons row
+        btn_c1, btn_c2, btn_c3 = st.columns([1.5, 1.5, 2])
+        with btn_c1:
+            if has_local_report and not is_indexed:
+                file_size_kb = os.path.getsize(local_report_path) / 1024
+                if st.button(f"⚡ Ingest Official {default_ticker} 10-K ({file_size_kb:.0f} KB)", type="primary", key=f"btn_quick_ingest_{default_ticker}", use_container_width=True):
+                    with st.spinner(f"Reading & indexing official Form 10-K for {default_ticker}..."):
+                        try:
+                            with open(local_report_path, "r", encoding="utf-8") as rf:
+                                report_content = rf.read()
+                            chs = ingest_document_text(
+                                text=report_content,
+                                filename=f"{default_ticker}_10K_filing.txt",
+                                ticker=default_ticker,
+                            )
+                            s3 = S3Service()
+                            if s3.is_available():
+                                s3.upload_bytes(
+                                    report_content.encode("utf-8"),
+                                    f"filings/{default_ticker}/{default_ticker}_10K_filing.txt",
+                                )
+                            st.success(f"Successfully indexed {chs} text chunks from {default_ticker} 10-K into ChromaDB!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error indexing 10-K: {e}")
+            elif is_indexed:
+                st.success(f"✓ {default_ticker} 10-K is indexed in vector database.")
+            else:
+                st.info(f"Upload custom filing below or run multi-agent live telemetry.")
+
+        with btn_c2:
+            if st.button(f"🔍 Research {default_ticker} in Tab 2", key=f"btn_nav_research_{default_ticker}", use_container_width=True):
+                st.session_state["target_ticker_val"] = default_ticker
+                st.session_state["target_ticker_field"] = default_ticker
+                st.info(f"Target set to {default_ticker}! Switch to **Stock Analysis & Due Diligence** tab to run pipeline.")
 
     if uploaded_files:
         st.write("##### Selected Files")
@@ -263,9 +366,25 @@ with tab_analysis:
 
     col1, col2 = st.columns(2)
     with col1:
-        ticker = st.text_input("Target Stock Ticker", value=target_default, key="target_ticker_field").upper().strip()
+        raw_target = st.text_input(
+            "Target Stock Ticker or Company Name",
+            value=target_default,
+            key="target_ticker_field",
+            help="Enter ticker or company name (e.g. AAPL, NVDA, TSLA, Tesla, Apple)",
+        ).strip()
+        ticker = detect_nasdaq_ticker(raw_target) or raw_target.upper()
+        if raw_target.upper() != ticker:
+            st.caption(f"Resolved: `{ticker}` — **{get_nasdaq_company_name(ticker)}**")
     with col2:
-        benchmark = st.text_input("Benchmark Competitor Ticker", value=bench_default, key="bench_ticker_field").upper().strip()
+        raw_bench = st.text_input(
+            "Benchmark Competitor Ticker or Company Name",
+            value=bench_default,
+            key="bench_ticker_field",
+            help="Enter benchmark ticker or company name (e.g. MSFT, Google)",
+        ).strip()
+        benchmark = detect_nasdaq_ticker(raw_bench) or raw_bench.upper()
+        if raw_bench.upper() != benchmark:
+            st.caption(f"Resolved: `{benchmark}` — **{get_nasdaq_company_name(benchmark)}**")
 
     indexed_tickers = get_indexed_tickers()
     if indexed_tickers:
