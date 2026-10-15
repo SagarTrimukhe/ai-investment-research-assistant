@@ -16,6 +16,7 @@ class InvestmentMemoOutput(BaseModel):
     thesis_points: List[str] = Field(description="3-4 core investment pillars supporting the rating")
     key_risks: List[str] = Field(description="Key business, valuation, or macro risk factors")
     catalysts: List[str] = Field(description="Upcoming catalysts (e.g. product releases, earnings, margin expansion)")
+    red_pill_insights: str = Field(description="Contrarian or non-consensus insights the market may be overlooking, with actionable evidence. Maximum 5 sentences.")
 
 
 def summary_agent_node(state: AgentState) -> dict:
@@ -97,6 +98,7 @@ Based on these findings, provide an investment summary including:
 5. 3-4 core thesis points
 6. Main risk factors
 7. Upcoming catalysts
+8.1 Red Pill Insights: Share 1-3 contrarian or non-consensus observations the market may be underpricing or ignoring about this stock. For each insight, provide the specific, actionable evidence (data point, filing excerpt, or valuation anomaly) that supports it. Maximum 5 sentences total.
 """
 
     try:
@@ -117,6 +119,7 @@ Based on these findings, provide an investment summary including:
             "thesis_points": data.thesis_points,
             "key_risks": data.key_risks,
             "catalysts": data.catalysts,
+            "red_pill_insights": data.red_pill_insights,
             "volatility_metrics": volatility_data,
             "tools_used": tools_called,
         }
