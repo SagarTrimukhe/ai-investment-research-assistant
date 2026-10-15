@@ -23,6 +23,8 @@ from app.services.nasdaq_universe import (
     get_nasdaq_universe,
     get_nasdaq_tickers,
     get_nasdaq_company_name,
+    detect_nasdaq_ticker,
+    NASDAQ_UNIVERSE,
 )
 from app.ui_theme import (
     inject_custom_css,
