@@ -578,14 +578,14 @@ with tab_analysis:
         risks = state.get("risks", [])
 
         if metrics:
-            render_section_title("Card 1 — Key Financial Metrics", "Displays audited numbers: Total Revenue, Operating Income, and segment performance", icon="📊")
+            render_section_title("Key Financial Metrics", "Fundamental accounting metrics extracted from 10-K SEC filings", icon="📊")
             m_cols = st.columns(len(metrics))
             for col, (k, v) in zip(m_cols, metrics.items()):
                 label = k.replace("_", " ").title()
                 col.metric(label, v)
 
         if summary:
-            render_section_title("Card 2 — Fundamental Analysis Summary", "Provides qualitative operational insights extracted from Item 7 Management Discussion & Analysis (MD&A)", icon="📑")
+            render_section_title("Fundamental Analysis Summary", "Automated qualitative breakdown from filing notes", icon="📑")
             st.write(summary)
 
         # Display Sentiment & Sector Trends
