@@ -144,10 +144,12 @@ This script automatically:
 ## 5. Part 4: Verification & S3 Connectivity Test
 
 ### Step 4.1: Test S3 Integration
-Run the built-in diagnostic test inside the instance:
+Run the built-in diagnostic test inside the running Docker container (recommended, as all dependencies and environment variables are already mounted):
 ```bash
-python3 scripts/test_aws_s3.py
+sudo docker compose exec app python3 scripts/test_aws_s3.py
 ```
+*(Alternatively, if running directly on the EC2 host system Python, install the dependencies first: `pip3 install python-dotenv boto3 && python3 scripts/test_aws_s3.py`)*
+
 Expected output:
 ```
 ============================================================

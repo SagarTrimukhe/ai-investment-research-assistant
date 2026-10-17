@@ -578,14 +578,14 @@ with tab_analysis:
         risks = state.get("risks", [])
 
         if metrics:
-            render_section_title("Key Financial Metrics", "Fundamental accounting metrics extracted from 10-K SEC filings", icon="📊")
+            render_section_title("Card 1 — Key Financial Metrics", "Displays audited numbers: Total Revenue, Operating Income, and segment performance", icon="📊")
             m_cols = st.columns(len(metrics))
             for col, (k, v) in zip(m_cols, metrics.items()):
                 label = k.replace("_", " ").title()
                 col.metric(label, v)
 
         if summary:
-            render_section_title("Fundamental Analysis Summary", "Automated qualitative breakdown from filing notes", icon="📑")
+            render_section_title("Card 2 — Fundamental Analysis Summary", "Provides qualitative operational insights extracted from Item 7 Management Discussion & Analysis (MD&A)", icon="📑")
             st.write(summary)
 
         # Display Sentiment & Sector Trends
@@ -749,17 +749,17 @@ with tab_review:
         st.divider()
 
         # Review Form
-        render_section_title("Analyst Decision & Audit Log", "Record human approval decision and discretionary oversight", icon="✍️")
+        render_section_title("Analyst Review Form", "Record human approval decision and discretionary oversight", icon="✍️")
         with st.form("hitl_review_form"):
             decision = st.radio(
-                "Select action:",
-                ["Approve Investment Thesis", "Request Revisions / Flag Concerns"],
-                index=0 if (is_approved is not False) else 1,
+                "Approval Decision:",
+                ["Approve Investment Thesis", "Reject Recommendation", "Request Revision"],
+                index=0 if (is_approved is not False) else 2,
             )
             analyst_notes = st.text_area(
-                "Analyst Feedback / Notes:",
+                "Analyst Audit Notes:",
                 value=feedback if feedback else "",
-                placeholder="Enter feedback or validation notes here...",
+                placeholder="Audited against Q4 earnings release. Gross margin targets verified. Investment thesis certified.",
             )
             submit_btn = st.form_submit_button("Submit Decision", type="primary")
 
