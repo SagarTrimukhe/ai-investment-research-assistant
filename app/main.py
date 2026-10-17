@@ -354,39 +354,72 @@ with tab_analysis:
         icon="🎯",
     )
 
-    st.html('<div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#94A3B8; font-weight:700; margin-bottom:8px;">⚡ Quick Select Benchmark Assets:</div>')
+    PEER_MAPPING = {
+        "AAPL": "MSFT",
+        "NVDA": "AMD",
+        "MSFT": "GOOGL",
+        "META": "GOOGL",
+        "AMZN": "MSFT",
+        "GOOGL": "MSFT",
+        "TSLA": "RIVN",
+    }
+
+    if "target_ticker_field" not in st.session_state:
+        st.session_state["target_ticker_field"] = "AAPL"
+    if "bench_ticker_field" not in st.session_state:
+        st.session_state["bench_ticker_field"] = "MSFT"
+
+    def on_preset_click(sym):
+        peer = PEER_MAPPING.get(sym, "MSFT" if sym != "MSFT" else "GOOGL")
+        st.session_state["target_ticker_field"] = sym
+        st.session_state["bench_ticker_field"] = peer
+        st.session_state["target_ticker_val"] = sym
+        st.session_state["benchmark_val"] = peer
+
+    def on_swap_click():
+        cur_t = st.session_state.get("target_ticker_field", "AAPL")
+        cur_b = st.session_state.get("bench_ticker_field", "MSFT")
+        st.session_state["target_ticker_field"] = cur_b
+        st.session_state["bench_ticker_field"] = cur_t
+        st.session_state["target_ticker_val"] = cur_b
+        st.session_state["benchmark_val"] = cur_t
+
+    def on_bench_click(b_sym):
+        st.session_state["bench_ticker_field"] = b_sym
+        st.session_state["benchmark_val"] = b_sym
+
+    st.html('<div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#94A3B8; font-weight:700; margin-bottom:8px;">⚡ Quick Select Target & Peer Pair:</div>')
     q_cols = st.columns(7)
     quick_picks = ["AAPL", "NVDA", "MSFT", "META", "AMZN", "GOOGL", "TSLA"]
     for q_col, q_sym in zip(q_cols, quick_picks):
-        if q_col.button(q_sym, key=f"quick_{q_sym}", use_container_width=True):
-            st.session_state["target_ticker_val"] = q_sym
-            st.session_state["benchmark_val"] = "MSFT" if q_sym != "MSFT" else "GOOGL"
-            st.rerun()
+        q_col.button(q_sym, key=f"quick_{q_sym}", on_click=on_preset_click, args=(q_sym,), use_container_width=True)
 
-    target_default = st.session_state.get("target_ticker_val", "AAPL")
-    bench_default = st.session_state.get("benchmark_val", "MSFT")
-
-    col1, col2 = st.columns(2)
+    col1, col_swap, col2 = st.columns([5, 1, 5])
     with col1:
         raw_target = st.text_input(
             "Target Stock Ticker or Company Name",
-            value=target_default,
             key="target_ticker_field",
             help="Enter ticker or company name (e.g. AAPL, NVDA, TSLA, Tesla, Apple)",
         ).strip()
         ticker = detect_nasdaq_ticker(raw_target) or raw_target.upper()
         if raw_target.upper() != ticker:
             st.caption(f"Resolved: `{ticker}` — **{get_nasdaq_company_name(ticker)}**")
+    with col_swap:
+        st.write("")
+        st.write("")
+        st.button("⇄", help="Swap Target & Benchmark", on_click=on_swap_click, use_container_width=True)
     with col2:
         raw_bench = st.text_input(
             "Benchmark Competitor Ticker or Company Name",
-            value=bench_default,
             key="bench_ticker_field",
-            help="Enter benchmark ticker or company name (e.g. MSFT, Google)",
+            help="Enter benchmark ticker or company name (e.g. MSFT, Google, TSLA)",
         ).strip()
         benchmark = detect_nasdaq_ticker(raw_bench) or raw_bench.upper()
         if raw_bench.upper() != benchmark:
             st.caption(f"Resolved: `{benchmark}` — **{get_nasdaq_company_name(benchmark)}**")
+
+    # Quick benchmark peer chips
+    st.caption("Quick Benchmark Peers: " + " • ".join(f"`{p}`" for p in ["MSFT", "GOOGL", "NVDA", "AMD", "TSLA", "RIVN"]))
 
     indexed_tickers = get_indexed_tickers()
     if indexed_tickers:
