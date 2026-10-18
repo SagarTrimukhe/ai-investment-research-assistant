@@ -13,25 +13,24 @@ A multi-agent equity research assistant built with LangGraph, ChromaDB, and Stre
 
 ## Setup & Installation
 
-1. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if it is not already installed.
 
-2. Install dependencies:
+2. Sync the project dependencies:
    ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
+   This creates the project virtual environment and installs the dependencies from `uv.lock`. The project requires Python 3.14; uv can install the required Python version if needed.
 
-3. Configure environment variables:
+3. Configure environment variables by creating a `.env` file in the project root:
    ```bash
-   cp .env.example .env
-   # Add your GEMINI_API_KEY
+   GEMINI_API_KEY=your_gemini_api_key
    ```
+   Add any other service credentials you use, such as `OPENAI_API_KEY` or AWS credentials.
 
 ## Running the Application
 
+Start the Streamlit application from the project root:
+
 ```bash
-streamlit run app/main.py
+uv run streamlit run app/main.py
 ```
